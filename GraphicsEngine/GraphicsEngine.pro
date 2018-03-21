@@ -23,11 +23,15 @@ SOURCES       = glwidget.cpp \
 FORMS		  = BasicViewer-Template/forms/basicwindow.ui \
 				SimplePhong/forms/phongwindow.ui \
 
-QT           += widgets
+QT           += widgets \
+				opengl
+
 CONFIG		 += console
 
-INCLUDEPATH  += glm
+INCLUDEPATH  += glm \
+				SimpleViewer-Template/headers \
+				SimplePhong/headers \
 
 # install
-target.path = $$[QT_INSTALL_EXAMPLES]/opengl/hellogl2
+target.path = $$[QT_INSTALL_EXAMPLES]/opengl/GraphicsEngine
 INSTALLS += target
