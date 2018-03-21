@@ -4,6 +4,7 @@ HEADERS       = glwidget.h \
                 window.h \
                 mainwindow.h \
                 logo.h \
+                definitions.h \
                 BasicViewer-Template/headers/basicglwidget.h \
                 BasicViewer-Template/headers/basicwindow.h \
                 BasicViewer-Template/headers/phongglwidget.h \
