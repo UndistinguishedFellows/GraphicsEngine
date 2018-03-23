@@ -59,8 +59,8 @@
 #include <QMatrix4x4>
 #include "logo.h"
 
-#include "glm\glm.hpp"
-#include "glm\gtc\matrix_transform.hpp"
+#include <glm/glm.hpp>
+#include <glm\gtc\matrix_transform.hpp>
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
