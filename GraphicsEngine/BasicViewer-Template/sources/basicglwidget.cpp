@@ -22,6 +22,7 @@ BasicGLWidget::BasicGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 	m_sceneRadius = 50.0f;
 	m_bkgColor = Qt::black;
 	m_backFaceCulling = false;
+	m_Interaction = NONE;
 
 	// Shaders
 	m_program = nullptr;
@@ -32,11 +33,11 @@ BasicGLWidget::BasicGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 	m_fps = 0;
 
 
-	// TO DO: Initialize the other attributes
+	// Initialize the other attributes
 	m_ar = m_width / m_height;
-	m_fovIni = 60.f;
+	m_fovIni = DEG2RAD(60.0f);
 	m_fov = m_fovIni;
-	m_radsZoom = glm::radians(m_fov);
+	m_radsZoom = 0.0f;
 	m_zNear = 0.1f;
 	m_zFar = 50.f;
 
@@ -120,8 +121,8 @@ void BasicGLWidget::paintGL()
 	sceneTransform();
 
 	// Draw the scene
-	//glDrawArrays(GL_TRIANGLES, 0, 6);
-	glDrawElements(GL_TRIANGLES, m_EBO, GL_UNSIGNED_INT, NULL);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	//glDrawElements(GL_TRIANGLES, m_EBO, GL_UNSIGNED_INT, NULL);
 
 	// Unbind the vertex array
 	glBindVertexArray(0);
@@ -203,47 +204,69 @@ void BasicGLWidget::keyPressEvent(QKeyEvent *event)
 
 void BasicGLWidget::mousePressEvent(QMouseEvent *event)
 {
-	// TO DO: Rotation of the scene and PAN
+	m_xClick = event->x();
+	m_yClick = event->y();
 
-	m_xClick = event->pos().x();
-	m_yClick = event->pos().y();
+	if (event->buttons() & Qt::LeftButton)
+		m_Interaction = ROTATE;
+	else if (event->buttons() & Qt::RightButton)
+		m_Interaction = PAN;
 }
 
 void BasicGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	// TO DO: Rotation of the scene and PAN
-	int dx = event->x() - m_xClick;
-	int dy = event->y() - m_yClick;
-
-	if(event->buttons() & Qt::MidButton)
+	makeCurrent();
+	
+	if(m_Interaction == ROTATE)
 	{
-		// Pan
-		m_xPan += dx;
-		m_yPan += dy;
+		m_yRot += (event->x() - m_xClick) * PI / 180.f;
+		m_xRot += (event->y() - m_yClick) * PI / 180.f;
 	}
-	else if(event->buttons() & Qt::RightButton)
+	else if(m_Interaction == PAN)
 	{
-		// Rotate
-		m_xRot += dx;
-		m_yRot += dy;
+		m_xPan += (event->x() - m_xClick) * 0.1f;
+		m_yPan += (event->y() - m_yClick) * 0.1f;
+		viewTransform();
 	}
 
-	m_xClick = event->pos().x();
-	m_yClick = event->pos().y();
+	m_xClick = event->x();
+	m_yClick = event->y();
 
-	viewTransform();
+	update();
 }
 
 void BasicGLWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-	// TO DO: Rotation of the scene and PAN
-
+	m_Interaction = NONE;
+	event->ignore();
 }
 
 void BasicGLWidget::wheelEvent(QWheelEvent* event)
 {
-	// TO DO: Change the fov of the camera to zoom in and out	
-	
+	int deg = event->delta() / 8;
+
+	float rads = DEG2RAD(deg / 2.0f);
+
+	float maxFov = DEG2RAD(175.f);
+	float minFov = DEG2RAD(15.f);
+
+	if(m_fov >= minFov && m_fov <= maxFov)
+	{
+		makeCurrent();
+
+		float preFov = m_fov;
+
+		float fov = m_fov + rads / 2.f;
+		fov = MIN(fov, maxFov);
+		m_fov = MAX(fov, minFov);
+
+		m_radsZoom += m_fov - preFov;
+
+		projectionTransform();
+		update();
+	}
+
+	event->accept();
 }
 
 void BasicGLWidget::loadShaders()
@@ -293,16 +316,13 @@ void BasicGLWidget::reloadShaders()
 
 void BasicGLWidget::projectionTransform()
 {
-	makeCurrent();
 	// Set the camera type
 	glm::mat4 proj(1.0f);
 	
-	// TO DO: Set the camera parameters 
+	m_zNear = m_sceneRadius;
+	m_zFar = 3.0f * m_sceneRadius;
 	
-	//m_zNear = m_sceneRadius;
-	//m_zFar = 3 * m_sceneRadius;
-	
-	proj = glm::perspective(m_radsZoom, m_ar, m_zNear, m_zFar);
+	proj = glm::perspective(m_fov, m_ar, m_zNear, m_zFar);
 
 	// Send the matrix to the shader
 	glUniformMatrix4fv(m_projLoc, 1, GL_FALSE, &proj[0][0]);
@@ -313,6 +333,24 @@ void BasicGLWidget::resetCamera()
 {
 	// TO DO: Reset the camera/view parameters
 	makeCurrent();
+
+	m_sceneCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+	m_ar = m_width / m_height;
+	m_fov = m_fovIni;
+	m_radsZoom = 0.0f;
+	m_zNear = 0.1f;
+	m_zFar = 50.f;
+
+	m_xClick = 0;
+	m_yClick = 0;
+	m_xPan = 0.f;
+	m_yPan = 0.f;
+	m_xRot = 0.f;
+	m_xRot = 0.f;
+
+	viewTransform();
+	projectionTransform();
+	repaint();
 }
 
 void BasicGLWidget::viewTransform()
@@ -321,11 +359,9 @@ void BasicGLWidget::viewTransform()
 	// Set the camera position
 	glm::mat4 view(1.0f);
 
-	glm::vec3 pos(m_xPan, m_yPan, -1.f);
-	glm::vec3 look(m_xPan, m_yPan, 0.f);
-	glm::vec3 up(0.f, 1.f, 0.f);
-	// TO DO: Camera placement and PAN
-	view = glm::lookAt(pos, look, up);
+	view = glm::translate(view, m_sceneCenter + glm::vec3(0.f, 0.f, -2.f * m_sceneRadius));
+	view = glm::translate(view, glm::vec3(m_xPan, -m_yPan, 0.f));
+	view = glm::translate(view, -m_sceneCenter);
 
 	// Send the matrix to the shader
 	glUniformMatrix4fv(m_viewLoc, 1, GL_FALSE, &view[0][0]);
@@ -333,71 +369,73 @@ void BasicGLWidget::viewTransform()
 
 void BasicGLWidget::changeBackgroundColor() 
 {
-
-	// TO DO: Change the background color
-
+	m_bkgColor = QColorDialog::getColor();
+	repaint();
 }
 
 void BasicGLWidget::createBuffersScene()
 {
-	// TO DO: Create the buffers, initialize VAO, VBOs, etc.
-
-	uint indices[] = {
-		0, 1, 2,
-		1, 3, 2
+	// VBO vertices positions
+	glm::vec3 verts[6] = {
+		glm::vec3(-10.f, -10.f, 0.f),
+		glm::vec3(-10.f, 10.f, 0.f),
+		glm::vec3(10.f, -10.f, 0.f),
+		glm::vec3(10.f, -10.f, 0.f),
+		glm::vec3(-10.f, 10.f, 0.f),
+		glm::vec3(10.f, 10.f, 0.f)
 	};
 
-	float vertices[] = {
-		-0.5f, 0.5f, 0.0f,	// Top-Left
-		-0.5f, -0.5f, 0.0f,	// Bot-Left
-		0.5f, 0.5f, 0.0f,	// Top-Right
-		0.5f, -0.5f, 0.0f	// Bot-Right
+	// VBO normals
+	glm::vec3 normVerts[6] = {
+		glm::vec3(0.f, 1.f, 0.f),
+		glm::vec3(0.f, 1.f, 0.f),
+		glm::vec3(0.f, 1.f, 0.f),
+		glm::vec3(0.f, 1.f, 0.f),
+		glm::vec3(0.f, 1.f, 0.f),
+		glm::vec3(0.f, 1.f, 0.f)
 	};
 
-	float normals[] = {
-		0.f, 0.f, 1.f,
-		0.f, 0.f, 1.f,
-		0.f, 0.f, 1.f,
-		0.f, 0.f, 1.f
+	// VBO colors
+	glm::vec4 colorsVerts[6] = {
+		glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)
 	};
 
-	float colors[] = {
-		0.f, 1.f, 0.f,
-		0.f, 0.f, 1.f,
-		1.f, 1.f, 0.f,
-		1.f, 0.f, 0.f
-	};
-
+	// VAO creation
 	glGenVertexArrays(1, &m_VAO);
 	glBindVertexArray(m_VAO);
 
-	// Vertices
+	// VBO vertices
 	glGenBuffers(1, &m_VBOVerts);
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBOVerts);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
 
-	// Normals
+	// Enable attribute m_vertexLoc
+	glVertexAttribPointer(m_vertexLoc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(m_vertexLoc);
+
+	// VBO normals
 	glGenBuffers(1, &m_VBONorms);
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBONorms);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(1);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(normVerts), normVerts, GL_STATIC_DRAW);
 
-	// Colors
+	// Enable the attribute m_normalLoc
+	glVertexAttribPointer(m_normalLoc, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(m_normalLoc);
+
+	// VBO Colors
 	glGenBuffers(1, &m_VBOCols);
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBOCols);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(2);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colorsVerts), colorsVerts, GL_STATIC_DRAW);
 
-	// Indices
-	glGenBuffers(1, &m_EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	// Enable the attribute m_colorLoc
+	glVertexAttribPointer(m_colorLoc, 4, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(m_colorLoc);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
 
@@ -410,13 +448,12 @@ void BasicGLWidget::computeBBoxScene()
 
 void BasicGLWidget::sceneTransform()
 {
-	makeCurrent();
-
 	glm::mat4 geomTransform(1.0f);
 
-
-	// TO DO: Rotations of the scene
-
+	geomTransform = glm::translate(geomTransform, m_sceneCenter);
+	geomTransform = glm::rotate(geomTransform, m_xRot, glm::vec3(-1.f, 0.f, 0.f));
+	geomTransform = glm::rotate(geomTransform, m_yRot, glm::vec3(0.f, 1.f, 0.f));
+	geomTransform = glm::translate(geomTransform, -m_sceneCenter);
 
 	// Send the matrix to the shader
 	glUniformMatrix4fv(m_transLoc, 1, GL_FALSE, &geomTransform[0][0]);
@@ -427,27 +464,26 @@ void BasicGLWidget::computeFps()
 	if (m_frameCount == 0)
 		m_timer.start();
 
-	++m_frameCount;
-
-	if (m_timer.elapsed() > 1000.f)
+	if (m_timer.elapsed() / 1000.f >= 1.f)
 	{
 		m_fps = m_frameCount;
 		m_frameCount = 0;
 		m_timer.restart();
 	}
+
+	++m_frameCount;
 }
 
 void BasicGLWidget::showFps()
 {
 	// TO DO: Show the FPS
 	makeCurrent();
+
 	if (m_backFaceCulling)
 		glDisable(GL_CULL_FACE);
 
 	m_program->release();
 
-
-	// 
 	QPainter p;
 	p.begin(this);
 
@@ -465,4 +501,5 @@ void BasicGLWidget::showFps()
 
 	m_program->bind();
 
+	update();
 }

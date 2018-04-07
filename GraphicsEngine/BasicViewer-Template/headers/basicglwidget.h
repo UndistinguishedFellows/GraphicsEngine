@@ -17,6 +17,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "definitions.h"
 
 
 class BasicGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
@@ -85,9 +86,10 @@ private:
 	// Scene
 	glm::vec3 m_sceneCenter;
 	float m_sceneRadius;
-	GLuint m_EBO, m_VAO, m_VBOVerts, m_VBONorms, m_VBOCols;
+	GLuint m_VAO, m_VBOVerts, m_VBONorms, m_VBOCols;
 	QColor m_bkgColor;
 	bool m_backFaceCulling;
+	InteractiveAction m_Interaction;
 
 	// Mouse
 	int m_xClick;
