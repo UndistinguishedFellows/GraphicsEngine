@@ -107,6 +107,8 @@ void PhongGLWidget::initializeGL()
 	computeBBoxScene();
 	projectionTransform();
 	viewTransform();
+	// Send phong info
+	SendPhongInfo();
 }
 
 void PhongGLWidget::paintGL()
@@ -128,7 +130,7 @@ void PhongGLWidget::paintGL()
 	sceneTransform();
 
 	// Draw the scene
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// Unbind the vertex array
 	glBindVertexArray(0);
@@ -282,8 +284,8 @@ void PhongGLWidget::loadShaders()
 	QOpenGLShader fs(QOpenGLShader::Fragment, this);
 
 	// Load and compile the shaders
-	vs.compileSourceFile("./SimplePhong/shaders/basicgl.vert");
-	fs.compileSourceFile("./SimplePhong/shaders/basicgl.frag");
+	vs.compileSourceFile("./SimplePhong/shaders/phong.vert");
+	fs.compileSourceFile("./SimplePhong/shaders/phong.frag");
 
 	// Create the program
 	m_program = new QOpenGLShaderProgram;
@@ -303,10 +305,18 @@ void PhongGLWidget::loadShaders()
 	m_normalLoc = glGetAttribLocation(m_program->programId(), "normal");
 	m_colorLoc = glGetAttribLocation(m_program->programId(), "color");
 
-	// Get the uniforms locations of the vertex shader
+	// Get the uniforms locations of the frag shader
 	m_transLoc = glGetUniformLocation(m_program->programId(), "sceneTransform");
 	m_projLoc = glGetUniformLocation(m_program->programId(), "projTransform");
 	m_viewLoc = glGetUniformLocation(m_program->programId(), "viewTransform");
+
+	// Get uniform locations for phong
+	m_lightPosLoc = glGetUniformLocation(m_program->programId(), "lightPos");
+	m_lightColorLoc = glGetUniformLocation(m_program->programId(), "lightCol");
+	m_matAmbLoc = glGetUniformLocation(m_program->programId(), "matAmbient");
+	m_matDifLoc = glGetUniformLocation(m_program->programId(), "matDiffuse");
+	m_matSpecLoc = glGetUniformLocation(m_program->programId(), "matSpecular");
+	m_matShinLoc = glGetUniformLocation(m_program->programId(), "matShininess");
 }
 
 void PhongGLWidget::reloadShaders()
@@ -380,27 +390,151 @@ void PhongGLWidget::changeBackgroundColor()
 void PhongGLWidget::createBuffersScene()
 {
 	// VBO vertices positions
-	glm::vec3 verts[6] = {
-		glm::vec3(-10.f, -10.f, 0.f),
-		glm::vec3(-10.f, 10.f, 0.f),
-		glm::vec3(10.f, -10.f, 0.f),
-		glm::vec3(10.f, -10.f, 0.f),
-		glm::vec3(-10.f, 10.f, 0.f),
-		glm::vec3(10.f, 10.f, 0.f)
+	glm::vec3 verts[36] = {
+		//Front
+		glm::vec3(-10.f, -10.f, 10.f),
+		glm::vec3(-10.f, 10.f, 10.f),
+		glm::vec3(10.f, -10.f, 10.f),
+		glm::vec3(10.f, -10.f, 10.f),
+		glm::vec3(-10.f, 10.f, 10.f),
+		glm::vec3(10.f, 10.f, 10.f),
+
+		// Right
+		glm::vec3(10.f, -10.f, 10.f),
+		glm::vec3(10.f, 10.f, 10.f),
+		glm::vec3(10.f, -10.f, -10.f),
+		glm::vec3(10.f, -10.f, -10.f),
+		glm::vec3(10.f, 10.f, 10.f),
+		glm::vec3(10.f, 10.f, -10.f),
+
+		// Back
+		glm::vec3(10.f, -10.f, -10.f),
+		glm::vec3(10.f, 10.f, -10.f),
+		glm::vec3(-10.f, -10.f, -10.f),
+		glm::vec3(-10.f, -10.f, -10.f),
+		glm::vec3(10.f, 10.f, -10.f),
+		glm::vec3(-10.f, 10.f, -10.f),
+
+		// Left
+		glm::vec3(-10.f, -10.f, -10.f),
+		glm::vec3(-10.f, 10.f, -10.f),
+		glm::vec3(-10.f, -10.f, 10.f),
+		glm::vec3(-10.f, -10.f, 10.f),
+		glm::vec3(-10.f, 10.f, -10.f),
+		glm::vec3(-10.f, 10.f, 10.f),
+
+		// Top
+		glm::vec3(-10.f, 10.f, 10.f),
+		glm::vec3(-10.f, 10.f, -10.f),
+		glm::vec3(10.f, 10.f, 10.f),
+		glm::vec3(10.f, 10.f, 10.f),
+		glm::vec3(-10.f, 10.f, -10.f),
+		glm::vec3(10.f, 10.f, -10.f),
+
+		// Bot
+		glm::vec3(10.f, -10.f, 10.f),
+		glm::vec3(10.f, -10.f, -10.f),
+		glm::vec3(-10.f, -10.f, 10.f),
+		glm::vec3(-10.f, -10.f, 10.f),
+		glm::vec3(10.f, -10.f, -10.f),
+		glm::vec3(-10.f, -10.f, -10.f)
+
 	};
 
-	// VBO normals
-	glm::vec3 normVerts[6] = {
+	// VBO normals 
+	glm::vec3 normVerts[36] = {
+		// Front
+		glm::vec3(0.f, 0.f, 1.f),
+		glm::vec3(0.f, 0.f, 1.f),
+		glm::vec3(0.f, 0.f, 1.f),
+		glm::vec3(0.f, 0.f, 1.f),
+		glm::vec3(0.f, 0.f, 1.f),
+		glm::vec3(0.f, 0.f, 1.f),
+
+		// Right
+		glm::vec3(1.f, 0.f, 0.f),
+		glm::vec3(1.f, 0.f, 0.f),
+		glm::vec3(1.f, 0.f, 0.f),
+		glm::vec3(1.f, 0.f, 0.f),
+		glm::vec3(1.f, 0.f, 0.f),
+		glm::vec3(1.f, 0.f, 0.f),
+
+		// Back 
+		glm::vec3(0.f, 0.f, -1.f),
+		glm::vec3(0.f, 0.f, -1.f),
+		glm::vec3(0.f, 0.f, -1.f),
+		glm::vec3(0.f, 0.f, -1.f),
+		glm::vec3(0.f, 0.f, -1.f),
+		glm::vec3(0.f, 0.f, -1.f),
+
+		// Left
+		glm::vec3(-1.f, 0.f, 0.f),
+		glm::vec3(-1.f, 0.f, 0.f),
+		glm::vec3(-1.f, 0.f, 0.f),
+		glm::vec3(-1.f, 0.f, 0.f),
+		glm::vec3(-1.f, 0.f, 0.f),
+		glm::vec3(-1.f, 0.f, 0.f),
+
+		// Top
 		glm::vec3(0.f, 1.f, 0.f),
 		glm::vec3(0.f, 1.f, 0.f),
 		glm::vec3(0.f, 1.f, 0.f),
 		glm::vec3(0.f, 1.f, 0.f),
 		glm::vec3(0.f, 1.f, 0.f),
-		glm::vec3(0.f, 1.f, 0.f)
+		glm::vec3(0.f, 1.f, 0.f),
+
+		// Bot
+		glm::vec3(0.f, -1.f, 0.f),
+		glm::vec3(0.f, -1.f, 0.f),
+		glm::vec3(0.f, -1.f, 0.f),
+		glm::vec3(0.f, -1.f, 0.f),
+		glm::vec3(0.f, -1.f, 0.f),
+		glm::vec3(0.f, -1.f, 0.f)
 	};
 
 	// VBO colors
-	glm::vec4 colorsVerts[6] = {
+	glm::vec4 colorsVerts[36] = {
+		// Front
+		glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), 
+
+		// Right
+		glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),
+
+		// Back
+		glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),
+
+		// Left
+		glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),
+
+		// Top
+		glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+		glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),
+
+		// Bot
 		glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
 		glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
 		glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
@@ -505,4 +639,18 @@ void PhongGLWidget::showFps()
 	m_program->bind();
 
 	update();
+}
+
+void PhongGLWidget::SendPhongInfo()
+{
+	m_lightPos = glm::vec3(12.f, 12.f, 0.f);
+	glUniform3fv(m_lightPosLoc, 1, &m_lightPos[0]);
+
+	m_lightCol = glm::vec3(1.f, 1.f, 1.f);
+	glUniform3fv(m_lightColorLoc, 1, &m_lightCol[0]);
+
+	glUniform3f(m_matAmbLoc, 1.f, 0.5f, 0.31f);
+	glUniform3f(m_matDifLoc, 1.f, 05.f, 0.31f);
+	glUniform3f(m_matSpecLoc, 0.5f, 05.f, 0.31f);
+	glUniform1f(m_matShinLoc, 32.f);
 }

@@ -15,7 +15,12 @@ out vec4 vertexColor;
 
 void main()
 {
+	vertexColor = color;
     vertexOCS = viewTransform * sceneTransform * vec4(vertex, 1);
-    vertexColor = color;
+
+	mat3 normalMat = inverse(transpose(mat3(viewTransform * sceneTransform)));
+
+    normalOCS = normalize(vec3(normalMat * normal));
+
     gl_Position = projTransform * vertexOCS;
 }

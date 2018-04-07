@@ -70,6 +70,9 @@ private:
 	// FPS
 	void computeFps();
 	void showFps();
+
+	// Light info
+	void SendPhongInfo();
 	
 	/* Attributes */
 	// Screen
@@ -102,6 +105,12 @@ private:
 	int m_yClick;
 	float m_xRot;
 	float m_yRot;
+
+	// Phong 
+	//		Light
+	glm::vec3 m_lightPos;
+	glm::vec3 m_lightCol;
+	GLuint m_lightPosLoc, m_lightColorLoc, m_matAmbLoc, m_matDifLoc, m_matSpecLoc, m_matShinLoc;
 
 	// Shaders
     QOpenGLShaderProgram *m_program;
