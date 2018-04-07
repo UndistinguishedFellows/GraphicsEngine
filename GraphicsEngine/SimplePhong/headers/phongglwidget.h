@@ -15,8 +15,9 @@
 #include <QTime>
 #include <QWheelEvent>
 
-#include "../glm/glm.hpp"
-#include "../glm/gtc/matrix_transform.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include "definitions.h"
 
 
 
@@ -30,6 +31,8 @@ public:
 
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
+
+	void SelectCameraType(CameraType type);
 
 public slots:
     void cleanup();
@@ -89,6 +92,10 @@ private:
 	GLuint m_VAO, m_VBOVerts, m_VBONorms, m_VBOCols;
 	QColor m_bkgColor;
 	bool m_backFaceCulling;
+	InteractiveAction m_Interaction;
+
+	// Camera type
+	CameraType m_cameraType;
 
 	// Mouse
 	int m_xClick;
@@ -103,6 +110,9 @@ private:
 
 	// FPS
 	bool m_showFps;
+	QTime m_timer;
+	uint m_frameCount;
+	uint m_fps;
 	
 };
 

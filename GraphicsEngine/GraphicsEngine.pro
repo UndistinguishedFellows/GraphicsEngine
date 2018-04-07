@@ -7,8 +7,8 @@ HEADERS       = glwidget.h \
                 definitions.h \
                 BasicViewer-Template/headers/basicglwidget.h \
                 BasicViewer-Template/headers/basicwindow.h \
-                #SimplePhong/headers/phongglwidget.h \
-                #SimplePhong/headers/phongwindow.h \
+                SimplePhong/headers/phongglwidget.h \
+                SimplePhong/headers/phongwindow.h \
 
 SOURCES       = glwidget.cpp \
                 main.cpp \
@@ -17,12 +17,12 @@ SOURCES       = glwidget.cpp \
                 logo.cpp \
                 BasicViewer-Template/sources/basicglwidget.cpp \
                 BasicViewer-Template/sources/basicwindow.cpp \
-                #SimplePhong/sources/phongglwidget.cpp \
-                #SimplePhong/sources/phongwindow.cpp \
+                SimplePhong/sources/phongglwidget.cpp \
+                SimplePhong/sources/phongwindow.cpp \
 
 
 FORMS		  = BasicViewer-Template/forms/basicwindow.ui \
-				#SimplePhong/forms/phongwindow.ui \
+				SimplePhong/forms/phongwindow.ui \
 
 QT           += widgets \
 				opengl
@@ -31,7 +31,7 @@ CONFIG		 += console
 
 INCLUDEPATH  += ThirdParty/glm \
 		BasicViewer-Template/headers \
-		#SimplePhong/headers \
+		SimplePhong/headers \
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/opengl/GraphicsEngine

@@ -14,6 +14,7 @@ public:
 
 private slots:
 	void dockUndock();
+	void SelectCameraType(int index);
 
 private:
 	Ui::BasicWindow m_ui;

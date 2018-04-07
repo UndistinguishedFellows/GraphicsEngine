@@ -24,6 +24,9 @@ BasicGLWidget::BasicGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 	m_backFaceCulling = false;
 	m_Interaction = NONE;
 
+	// Camera
+	m_cameraType = SIMPLE;
+
 	// Shaders
 	m_program = nullptr;
 
@@ -46,7 +49,7 @@ BasicGLWidget::BasicGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 	m_xPan = 0.f;
 	m_yPan = 0.f;
 	m_xRot = 0.f;
-	m_xRot = 0.f;
+	m_yRot = 0.f;
 
 }
 
@@ -63,6 +66,11 @@ QSize BasicGLWidget::minimumSizeHint() const
 QSize BasicGLWidget::sizeHint() const
 {
     return QSize(m_width, m_height);
+}
+
+void BasicGLWidget::SelectCameraType(CameraType type)
+{
+	m_cameraType = type;
 }
 
 void BasicGLWidget::cleanup()
@@ -167,8 +175,6 @@ void BasicGLWidget::keyPressEvent(QKeyEvent *event)
 			// Enable/Disable frames per second
 			m_showFps = !m_showFps;
 			update();
-			
-			// TO DO: Show or hide the FPS information
 
 			break;
 		case Qt::Key_H:
@@ -326,12 +332,10 @@ void BasicGLWidget::projectionTransform()
 
 	// Send the matrix to the shader
 	glUniformMatrix4fv(m_projLoc, 1, GL_FALSE, &proj[0][0]);
-
 }
 
 void BasicGLWidget::resetCamera()
 {
-	// TO DO: Reset the camera/view parameters
 	makeCurrent();
 
 	m_sceneCenter = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -346,7 +350,7 @@ void BasicGLWidget::resetCamera()
 	m_xPan = 0.f;
 	m_yPan = 0.f;
 	m_xRot = 0.f;
-	m_xRot = 0.f;
+	m_yRot = 0.f;
 
 	viewTransform();
 	projectionTransform();
@@ -476,7 +480,6 @@ void BasicGLWidget::computeFps()
 
 void BasicGLWidget::showFps()
 {
-	// TO DO: Show the FPS
 	makeCurrent();
 
 	if (m_backFaceCulling)

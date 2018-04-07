@@ -1,29 +1,30 @@
-#include "../headers/phongglwidget.h"
-#include "../headers/phongwindow.h"
-#include "../headers/mainwindow.h"
+#include "../SimplePhong/headers/phongwindow.h"
+#include "../SimplePhong/headers/phongglwidget.h"
+#include "mainwindow.h"
 #include <QDesktopWidget>
 #include <QApplication>
 #include <QMessageBox>
+#include <QVBoxLayout>
 
 PhongWindow::PhongWindow(MainWindow* mw) :m_mainWindow(mw)
 {
 	m_ui.setupUi(this);
 
-	// Insert the m_glWidget in the GUI
-	m_glWidget = new BasicGLWidget;
+	// Insert the phongWidget in the GUI
+	m_phongWidget = new PhongGLWidget(this);
 	QVBoxLayout* layoutFrame = new QVBoxLayout(m_ui.qGLFrame);
 	layoutFrame->setMargin(0);
-	layoutFrame->addWidget(m_glWidget);
-	m_glWidget->show();
+	layoutFrame->addWidget(m_phongWidget);
+	m_phongWidget->show();
 	
 	connect(m_ui.qUndockButton, SIGNAL(clicked()), this, SLOT(dockUndock()));
 }
 
 PhongWindow::~PhongWindow()
 {
-	if (m_glWidget != nullptr) {
-		delete m_glWidget;
-		m_glWidget = nullptr;
+	if (m_phongWidget != nullptr) {
+		delete m_phongWidget;
+		m_phongWidget = nullptr;
 	}
 		
 }

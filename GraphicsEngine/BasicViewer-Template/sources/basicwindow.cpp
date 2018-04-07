@@ -10,13 +10,14 @@ BasicWindow::BasicWindow(MainWindow* mw) :m_mainWindow(mw)
 	m_ui.setupUi(this);
 
 	// Insert the m_glWidget in the GUI
-	m_glWidget = new BasicGLWidget;
+	m_glWidget = new BasicGLWidget(this);
 	QVBoxLayout* layoutFrame = new QVBoxLayout(m_ui.qGLFrame);
 	layoutFrame->setMargin(0);
 	layoutFrame->addWidget(m_glWidget);
 	m_glWidget->show();
 	
 	connect(m_ui.qUndockButton, SIGNAL(clicked()), this, SLOT(dockUndock()));
+	// TODO: Connect the camera type combo 
 }
 
 BasicWindow::~BasicWindow()
@@ -54,4 +55,9 @@ void BasicWindow::dockUndock()
 			QMessageBox::information(0, tr("Cannot dock"), tr("Main window already occupied"));
 		}
 	}
+}
+
+void BasicWindow::SelectCameraType(int index)
+{
+	if (m_glWidget) m_glWidget->SelectCameraType((CameraType)index);
 }

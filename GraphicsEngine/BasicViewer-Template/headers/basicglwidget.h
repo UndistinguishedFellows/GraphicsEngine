@@ -31,6 +31,8 @@ public:
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
 
+	void SelectCameraType(CameraType type);
+
 public slots:
     void cleanup();
 
@@ -90,6 +92,9 @@ private:
 	QColor m_bkgColor;
 	bool m_backFaceCulling;
 	InteractiveAction m_Interaction;
+
+	// Camera type
+	CameraType m_cameraType;
 
 	// Mouse
 	int m_xClick;

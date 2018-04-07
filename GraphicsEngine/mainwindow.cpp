@@ -52,6 +52,7 @@
 #include "mainwindow.h"
 #include "window.h"
 #include "BasicViewer-Template/headers/basicwindow.h"
+#include "SimplePhong/headers/phongwindow.h"
 #include <QMenuBar>
 #include <QMenu>
 #include <QMessageBox>
@@ -71,10 +72,15 @@ MainWindow::MainWindow()
 	menuWindow->addAction(simpleNewWin);
 	connect(simpleNewWin, &QAction::triggered, this, &MainWindow::onAddBasicGlWidget);
 
+	QAction* phongNewWin = new QAction(menuWindow);
+	phongNewWin->setText(tr("Phong window"));
+	menuWindow->addAction(phongNewWin);
+	connect(phongNewWin, &QAction::triggered, this, &MainWindow::onAddPhongWidget);
+
     setMenuBar(menuBar);
 
-	onAddNew();
-	//onAddBasicGlWidget();
+	//onAddNew();
+	onAddBasicGlWidget();
 }
 
 void MainWindow::onAddNew()
@@ -89,6 +95,14 @@ void MainWindow::onAddBasicGlWidget()
 {
 	if (!centralWidget())
 		setCentralWidget(new BasicWindow(this));
+	else
+		ShowWindowCreationError();
+}
+
+void MainWindow::onAddPhongWidget()
+{
+	if (!centralWidget())
+		setCentralWidget(new PhongWindow(this));
 	else
 		ShowWindowCreationError();
 }

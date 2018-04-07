@@ -64,6 +64,7 @@ public:
 private slots:
     void onAddNew();
 	void onAddBasicGlWidget();
+	void onAddPhongWidget();
 
 private:
 	void ShowWindowCreationError();

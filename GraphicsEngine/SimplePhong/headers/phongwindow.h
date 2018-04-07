@@ -2,7 +2,7 @@
 #define PHONGWINDOW_H
 
 #include <QWidget>
-#include "ui_basicwindow.h"
+#include "ui_phongwindow.h"
 
 class MainWindow;
 class PhongGLWidget;
@@ -19,9 +19,9 @@ private slots:
 	void dockUndock();
 
 private:
-	Ui::BasicWindow m_ui;
+	Ui::PhongWindow m_ui;
 	MainWindow* m_mainWindow;
-	BasicGLWidget* m_glWidget;
+	PhongGLWidget* m_phongWidget;
 };
 
 #endif // !PHONGWINDOW_H

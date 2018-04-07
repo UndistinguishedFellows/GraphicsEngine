@@ -21,6 +21,7 @@
 
 /* Enumerations */
 enum InteractiveAction { NONE, PAN, ROTATE, ZOOM };
+enum CameraType { SIMPLE = 0, FPS = 1 };
 
 
 
