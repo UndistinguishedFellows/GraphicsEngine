@@ -17,8 +17,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "definitions.h"
-#include "Files/SSAO/headers/model.h"
-#include "../headers/model.h"
+#include "Files/model.h"
 #include <glm/detail/type_vec3.hpp>
 #include <glm/mat4x4.hpp>
 #include "definitions.h"

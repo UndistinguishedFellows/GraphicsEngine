@@ -64,6 +64,7 @@ public:
 private slots:
     void onAddNew();
 	void onAddSSAOGlWidget();
+	void onAddRayTraceWindow();
 
 private:
 	void ShowWindowCreationError();

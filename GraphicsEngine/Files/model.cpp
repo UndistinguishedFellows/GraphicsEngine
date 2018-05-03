@@ -7,7 +7,7 @@
  */
 
 #define __MODEL__DEF__ 1
-#include "../headers/model.h"
+#include "Files/model.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>

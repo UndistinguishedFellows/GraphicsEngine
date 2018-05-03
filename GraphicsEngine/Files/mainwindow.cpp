@@ -52,6 +52,7 @@
 #include "mainwindow.h"
 #include "window.h"
 #include "Files/SSAO/headers/ssaowindow.h"
+#include "Files/RT/headers/raytracingwindow.h"
 #include <QMenuBar>
 #include <QMenu>
 #include <QMessageBox>
@@ -71,10 +72,16 @@ MainWindow::MainWindow()
 	menuWindow->addAction(ssaoNewWin);
 	connect(ssaoNewWin, &QAction::triggered, this, &MainWindow::onAddSSAOGlWidget);
 
+	QAction* rayTraceNewWin = new QAction(menuWindow);
+	rayTraceNewWin->setText(tr("Ray tracing"));
+	menuWindow->addAction(rayTraceNewWin);
+	connect(rayTraceNewWin, &QAction::triggered, this, &MainWindow::onAddRayTraceWindow);
+
     setMenuBar(menuBar);
 
 	//onAddNew();
-	onAddSSAOGlWidget();
+	//onAddSSAOGlWidget();
+	onAddRayTraceWindow();
 }
 
 void MainWindow::onAddNew()
@@ -89,6 +96,14 @@ void MainWindow::onAddSSAOGlWidget()
 {
 	if (!centralWidget())
 		setCentralWidget(new SSAOWindow(this));
+	else
+		ShowWindowCreationError();
+}
+
+void MainWindow::onAddRayTraceWindow()
+{
+	if (!centralWidget())
+		setCentralWidget(new RayTracingWindow(this));
 	else
 		ShowWindowCreationError();
 }

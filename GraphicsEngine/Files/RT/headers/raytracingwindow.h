@@ -1,9 +1,9 @@
 #include <QWidget>
 #include "ui_raytracingwindow.h"
 
-#include "../glm/glm.hpp"
-#include "../headers/definitions.h"
-#include "../headers/sphere.h"
+#include "Files/ThirdParty/glm/glm.hpp"
+#include "Files/definitions.h"
+#include "Files/sphere.h"
 
 class MainWindow;
 

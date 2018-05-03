@@ -1,5 +1,5 @@
-#include "../headers/raytracingwindow.h"
-#include "../headers/mainwindow.h"
+#include "Files/RT/headers/raytracingwindow.h"
+#include "Files/mainwindow.h"
 #include <QDesktopWidget>
 #include <QApplication>
 #include <QFileDialog>
@@ -66,16 +66,12 @@ void RayTracingWindow::initGUI()
 	m_ui.qRayTracingView->show();
 }
 
-glm::vec3 RayTracingWindow::traceRay(
-	const glm::vec3 &rayOrig,
-	const glm::vec3 &rayDir,
-	const std::vector<Sphere> &spheres,
-	const int &depth)
+glm::vec3 RayTracingWindow::traceRay(const glm::vec3 &rayOrig, const glm::vec3 &rayDir, const std::vector<Sphere> &spheres, const int &depth)
 {
 	
 	
 	// TO DO
-
+	return glm::vec3(0.f);
 }
 
 void RayTracingWindow::render(const std::vector<Sphere> &spheres)
@@ -142,19 +138,11 @@ void RayTracingWindow::raytraceScene() {
 	spheres.push_back(Sphere(glm::vec3(-5.0f, 0.0f, -35.0f), 3, glm::vec3(0.5f, 0.5f, 0.5f), true, 0.0f, 0.0f));
 	spheres.push_back(Sphere(glm::vec3(-4.5f, -1.0f, -19.0f), 1.5f, glm::vec3(0.5f, 0.1f, 0.0f), true, 0.0f, 0.0f));
 
-	// UNCOMMENT THE NEXT LINE TO RENDER THE SCENE
+	//TODO: UNCOMMENT THE NEXT LINE TO RENDER THE SCENE
 	// render(spheres);
 }
 
-bool RayTracingWindow::intersection(
-	const Sphere &sphere,
-	const glm::vec3 &rayOrig,
-	const glm::vec3 &rayDir,
-	float &distHit,
-	glm::vec3 &posHit,
-	glm::vec3 &normalHit,
-	glm::vec3 &colorHit,
-	bool &isInside) {
+bool RayTracingWindow::intersection(const Sphere &sphere, const glm::vec3 &rayOrig, const glm::vec3 &rayDir, float &distHit, glm::vec3 &posHit, glm::vec3 &normalHit, glm::vec3 &colorHit, bool &isInside) {
 
 	float inter0 = INFINITY;
 	float inter1 = INFINITY;
