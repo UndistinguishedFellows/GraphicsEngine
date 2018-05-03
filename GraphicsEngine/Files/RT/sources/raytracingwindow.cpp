@@ -20,9 +20,12 @@ RayTracingWindow::RayTracingWindow(MainWindow* mw) :m_mainWindow(mw)
 	m_height = m_ui.qRayTracingView->height() - 2;
 	background_color = glm::vec3(1.0f, 1.0f, 1.0f);
 
+	m_maxRayDepth = MAX_RAY_DEPTH;
+
 	connect(m_ui.qUndockButton, SIGNAL(clicked()), this, SLOT(dockUndock()));
 	connect(m_ui.qRenderButton, SIGNAL(clicked()), this, SLOT(raytraceScene()));
 	connect(this, SIGNAL(renderingProgress(int)), m_ui.qProgressBar, SLOT(setValue(int)));
+	connect(m_ui.maxRayDepthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(maxRayDepthChanged(int)));
 }
 
 RayTracingWindow::~RayTracingWindow(){ }
@@ -140,6 +143,11 @@ void RayTracingWindow::raytraceScene() {
 
 	//TODO: UNCOMMENT THE NEXT LINE TO RENDER THE SCENE
 	// render(spheres);
+}
+
+void RayTracingWindow::maxRayDepthChanged(int value)
+{
+	m_maxRayDepth = value;
 }
 
 bool RayTracingWindow::intersection(const Sphere &sphere, const glm::vec3 &rayOrig, const glm::vec3 &rayDir, float &distHit, glm::vec3 &posHit, glm::vec3 &normalHit, glm::vec3 &colorHit, bool &isInside) {

@@ -14,6 +14,26 @@
    <string>Ray Tracing</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="0">
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <widget class="QPushButton" name="qRenderButton">
+      <property name="text">
+       <string>Render Scene</string>
+      </property>
+     </widget>
+     <widget class="QProgressBar" name="qProgressBar">
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="textVisible">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </widget>
+   </item>
    <item row="0" column="0">
     <widget class="QGraphicsView" name="qRayTracingView">
      <property name="sizePolicy">
@@ -42,30 +62,17 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QSplitter" name="splitter">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <widget class="QPushButton" name="qRenderButton">
-      <property name="text">
-       <string>Render Scene</string>
-      </property>
-     </widget>
-     <widget class="QProgressBar" name="qProgressBar">
-      <property name="value">
-       <number>0</number>
-      </property>
-      <property name="textVisible">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </widget>
-   </item>
-   <item row="2" column="0">
+   <item row="3" column="0">
     <widget class="QPushButton" name="qUndockButton">
      <property name="text">
       <string>Undock</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QSpinBox" name="maxRayDepthSpinBox">
+     <property name="value">
+      <number>1</number>
      </property>
     </widget>
    </item>
