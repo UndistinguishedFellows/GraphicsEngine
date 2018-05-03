@@ -14,6 +14,8 @@ RayTracingWindow::RayTracingWindow(MainWindow* mw) :m_mainWindow(mw)
 {
 	m_ui.setupUi(this);
 
+	std::cout << "=== Raytracing window" << std::endl;
+
 	initGUI();
 
 	m_width = m_ui.qRayTracingView->width() - 2;
@@ -32,7 +34,8 @@ RayTracingWindow::~RayTracingWindow(){ }
 
 void RayTracingWindow::dockUndock()
 {
-	if (parent()) {
+	if (parent()) 
+	{
 		setParent(0);
 		setAttribute(Qt::WA_DeleteOnClose);
 		move(QApplication::desktop()->width() / 2 - width() / 2,
@@ -40,19 +43,24 @@ void RayTracingWindow::dockUndock()
 		m_ui.qUndockButton->setText(tr("Dock"));
 		show();
 	}
-	else {
-		if (!m_mainWindow->centralWidget()) {
-			if (m_mainWindow->isVisible()) {
+	else 
+	{
+		if (!m_mainWindow->centralWidget()) 
+		{
+			if (m_mainWindow->isVisible()) 
+			{
 				setAttribute(Qt::WA_DeleteOnClose, false);
 				m_ui.qUndockButton->setText(tr("Undock"));
 				m_mainWindow->setCentralWidget(this);
 				show();
 			}
-			else {
+			else 
+			{
 				QMessageBox::information(0, tr("Cannot dock"), tr("Main window already closed"));
 			}
 		}
-		else {
+		else 
+		{
 			QMessageBox::information(0, tr("Cannot dock"), tr("Main window already occupied"));
 		}
 	}
@@ -71,7 +79,6 @@ void RayTracingWindow::initGUI()
 
 glm::vec3 RayTracingWindow::traceRay(const glm::vec3 &rayOrig, const glm::vec3 &rayDir, const std::vector<Sphere> &spheres, const int &depth)
 {
-	
 	
 	// TO DO
 	return glm::vec3(0.f);
@@ -142,7 +149,7 @@ void RayTracingWindow::raytraceScene() {
 	spheres.push_back(Sphere(glm::vec3(-4.5f, -1.0f, -19.0f), 1.5f, glm::vec3(0.5f, 0.1f, 0.0f), true, 0.0f, 0.0f));
 
 	//TODO: UNCOMMENT THE NEXT LINE TO RENDER THE SCENE
-	// render(spheres);
+	render(spheres);
 }
 
 void RayTracingWindow::maxRayDepthChanged(int value)
@@ -184,12 +191,8 @@ bool RayTracingWindow::intersection(const Sphere &sphere, const glm::vec3 &rayOr
 	}
 }
 
-glm::vec3 RayTracingWindow::blendReflRefrColors(
-	const Sphere* sphere,
-	const glm::vec3 &raydir,
-	const glm::vec3 &normalHit,
-	const glm::vec3 &reflColor,
-	const glm::vec3 &refrColor) {
+glm::vec3 RayTracingWindow::blendReflRefrColors(const Sphere* sphere, const glm::vec3 &raydir, const glm::vec3 &normalHit, const glm::vec3 &reflColor, const glm::vec3 &refrColor) 
+{
 
 	float facingRatio = -glm::dot(raydir, normalHit);
 	float fresnel = 0.5f + pow(1 - facingRatio, 3) * 0.5;
