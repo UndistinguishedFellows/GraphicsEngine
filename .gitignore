@@ -297,3 +297,6 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+!GP/Files/SSAO/models/*.obj
+/GP/P2_SSAO.sln
