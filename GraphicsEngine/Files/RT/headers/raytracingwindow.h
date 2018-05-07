@@ -4,11 +4,12 @@
 #include "Files/ThirdParty/glm/glm.hpp"
 #include "Files/definitions.h"
 #include "Files/sphere.h"
+#include "AbstractWindow.h"
 
 class MainWindow;
 
 
-class RayTracingWindow : public QWidget
+class RayTracingWindow : public AbstractWindow
 {
 	Q_OBJECT
 
@@ -17,7 +18,7 @@ public:
 	~RayTracingWindow();
 
 private slots:
-	void dockUndock();
+	void dockUndock() override;
 	void raytraceScene();
 	void maxRayDepthChanged(int value);
 
@@ -46,5 +47,4 @@ private:
 	int m_maxRayDepth;
 	
 	Ui::RayTracingWindow m_ui;
-	MainWindow* m_mainWindow;
 };

@@ -53,6 +53,7 @@
 #define WINDOW_H
 
 #include <QWidget>
+#include "AbstractWindow.h"
 
 class QSlider;
 class QPushButton;
@@ -60,7 +61,7 @@ class QPushButton;
 class GLWidget;
 class MainWindow;
 
-class Window : public QWidget
+class Window : public AbstractWindow
 {
     Q_OBJECT
 
@@ -71,7 +72,7 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
-    void dockUndock();
+    void dockUndock() override;
 
 private:
     QSlider *createSlider();
@@ -81,7 +82,6 @@ private:
     QSlider *ySlider;
     QSlider *zSlider;
     QPushButton *dockBtn;
-    MainWindow *mainWindow;
 };
 
 #endif

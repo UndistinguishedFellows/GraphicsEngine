@@ -7,7 +7,7 @@
 #include <QVBoxLayout>
 #include "definitions.h"
 
-SSAOWindow::SSAOWindow(MainWindow* mw) :m_mainWindow(mw)
+SSAOWindow::SSAOWindow(MainWindow* mw) : AbstractWindow(mw)
 {
 	m_ui.setupUi(this);
 
@@ -17,9 +17,9 @@ SSAOWindow::SSAOWindow(MainWindow* mw) :m_mainWindow(mw)
 	layoutFrame->setMargin(0);
 	layoutFrame->addWidget(m_glWidget);
 	m_glWidget->show();
-	
+
 	connect(m_ui.qUndockButton, SIGNAL(clicked()), this, SLOT(dockUndock()));
-	
+
 	// Connect the camera type
 	m_ui.cameraType_combo->addItem(QString("Static"));
 	m_ui.cameraType_combo->addItem(QString("FPS"));
@@ -68,11 +68,11 @@ void SSAOWindow::dockUndock()
 		show();
 	}
 	else {
-		if (!m_mainWindow->centralWidget()) {
-			if (m_mainWindow->isVisible()) {
+		if (!mainWindow->centralWidget()) {
+			if (mainWindow->isVisible()) {
 				setAttribute(Qt::WA_DeleteOnClose, false);
 				m_ui.qUndockButton->setText(tr("Undock"));
-				m_mainWindow->setCentralWidget(this);
+				mainWindow->setCentralWidget(this);
 				show();
 			}
 			else {

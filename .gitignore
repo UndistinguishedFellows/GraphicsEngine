@@ -298,5 +298,5 @@ paket-files/
 .idea/
 *.sln.iml
 
-!GP/Files/SSAO/models/*.obj
+!**/models/*.obj
 /GP/P2_SSAO.sln

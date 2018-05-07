@@ -1,10 +1,11 @@
 #include <QWidget>
 #include "ui_ssaowindow.h"
+#include "AbstractWindow.h"
 
 class MainWindow;
 class SSAOGLWidget;
 
-class SSAOWindow : public QWidget
+class SSAOWindow : public AbstractWindow
 {
 	Q_OBJECT
 
@@ -13,7 +14,7 @@ public:
 	~SSAOWindow();
 
 private slots:
-	void dockUndock();
+	void dockUndock() override;
 	void selectCameraType(int index);
 	void cameraSpeedChanged(double value);
 	void znearChanged(double value);
@@ -22,6 +23,5 @@ private slots:
 
 private:
 	Ui::SSSSAOWindow m_ui;
-	MainWindow* m_mainWindow;
 	SSAOGLWidget* m_glWidget;
 };

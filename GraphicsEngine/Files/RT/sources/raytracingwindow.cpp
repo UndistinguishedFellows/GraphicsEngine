@@ -10,7 +10,7 @@
 #include <fstream>
 
 
-RayTracingWindow::RayTracingWindow(MainWindow* mw) :m_mainWindow(mw)
+RayTracingWindow::RayTracingWindow(MainWindow* mw) : AbstractWindow(mw)
 {
 	m_ui.setupUi(this);
 
@@ -45,13 +45,13 @@ void RayTracingWindow::dockUndock()
 	}
 	else 
 	{
-		if (!m_mainWindow->centralWidget()) 
+		if (!mainWindow->centralWidget()) 
 		{
-			if (m_mainWindow->isVisible()) 
+			if (mainWindow->isVisible()) 
 			{
 				setAttribute(Qt::WA_DeleteOnClose, false);
 				m_ui.qUndockButton->setText(tr("Undock"));
-				m_mainWindow->setCentralWidget(this);
+				mainWindow->setCentralWidget(this);
 				show();
 			}
 			else 
