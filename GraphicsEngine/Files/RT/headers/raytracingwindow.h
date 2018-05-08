@@ -65,6 +65,10 @@ private:
 
 	glm::vec3 BlendReflRefrColors(const Sphere* sphere, const glm::vec3 &rayDir, const glm::vec3 &normalHit, const glm::vec3 &reflColor, const glm::vec3 &refrColor);
 
+	Ray& CalcReflectionRay(const Ray& ray, const HitInfo& hitInfo);
+	Ray& CalcRefractionRay(const Ray& ray, const HitInfo& hitInfo, const Sphere* sphere);
+	float CalcShadowFactor(HitInfo& hitInfo);
+
 
 private:
 	/* Attributes */
@@ -83,4 +87,8 @@ private:
 
 	std::vector<Sphere> m_spheres;
 	std::vector<Sphere> m_lights;
+
+	float m_epsilonFactor = 0.1f;
 };
+
+typedef glm::vec3 Color;
