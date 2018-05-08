@@ -20,7 +20,7 @@ RayTracingWindow::RayTracingWindow(MainWindow* mw) : AbstractWindow(mw)
 
 	m_width = m_ui.qRayTracingView->width() - 2;
 	m_height = m_ui.qRayTracingView->height() - 2;
-	background_color = glm::vec3(1.0f, 1.0f, 1.0f);
+	background_color = glm::vec3(0.2f);
 
 	m_maxRayDepth = MAX_RAY_DEPTH;
 
@@ -79,9 +79,83 @@ void RayTracingWindow::initGUI()
 
 glm::vec3 RayTracingWindow::traceRay(const glm::vec3 &rayOrig, const glm::vec3 &rayDir, const std::vector<Sphere> &spheres, const int &depth)
 {
-	
-	// TO DO
-	return glm::vec3(0.f);
+	Sphere* sphere = nullptr;
+	float minDist = INFINITY;
+	glm::vec3 pHit, nHit;
+
+	std::vector<const Sphere*> lights;
+
+	for(int i = 0; i < spheres.size(); ++i)
+	{
+		const Sphere* it = &spheres[i];
+
+		if(!it->isLight())
+		{
+			float distanceHit;
+			glm::vec3 surfaceColor;
+			bool inside;
+
+			if (intersection(*it, rayOrig, rayDir, distanceHit, pHit, nHit, surfaceColor, inside))
+			{
+				// Calc the distance
+				//float distance = glm::distance(rayOrig, pHit);
+				if (distanceHit < minDist)
+				{
+					// Assign the closer sphere
+					sphere = (Sphere*)it;
+					minDist = distanceHit;
+				}
+			}
+		}
+		else
+		{
+			lights.push_back(it);
+		}
+	}
+
+	if(!sphere)
+	{
+		// If no collision take the background color
+		return background_color;
+	}
+
+	// If there's a collision with a sphere calc the shadow
+	//for(auto it : lights)
+	//{
+	//	glm::vec3 shadowRayOrigin = pHit;
+	//	glm::vec3 shadowRayDir = it->getCenter() - pHit;
+	//	bool isShadow;
+	//	
+	//	float distanceHit;
+	//	glm::vec3 colorHit, lHit, lNorm;
+	//	bool inside;
+	//	if(intersection(*it, shadowRayOrigin, shadowRayDir, distanceHit, lHit, /lNorm, /colorHit, inside))
+	//	{
+	//		
+	//	}
+	//}
+
+	const Sphere* light = lights[0];
+	glm::vec3 shadowRayOrigin = pHit;
+	glm::vec3 shadowRayDir = light->getCenter() - pHit;
+
+	/*for(int i = 0; i < spheres.size(); ++i)
+	{
+		if(!spheres[i].isLight())
+		{
+			float distanceHit;
+			glm::vec3 colorHit, lHit, lNorm;
+			bool inside;
+			if (intersection(spheres[i], shadowRayOrigin, shadowRayDir, distanceHit, lHit, lNorm, colorHit, inside))
+			{
+				// Shadow
+				return glm::vec3(0.f);
+			}
+		}
+	}*/
+
+
+	return sphere->getSurfaceColor();
 }
 
 void RayTracingWindow::render(const std::vector<Sphere> &spheres)
@@ -157,7 +231,8 @@ void RayTracingWindow::maxRayDepthChanged(int value)
 	m_maxRayDepth = value;
 }
 
-bool RayTracingWindow::intersection(const Sphere &sphere, const glm::vec3 &rayOrig, const glm::vec3 &rayDir, float &distHit, glm::vec3 &posHit, glm::vec3 &normalHit, glm::vec3 &colorHit, bool &isInside) {
+bool RayTracingWindow::intersection(const Sphere &sphere, const glm::vec3 &rayOrig, const glm::vec3 &rayDir, float &distHit, glm::vec3 &posHit, glm::vec3 &normalHit, glm::vec3 &colorHit, bool &isInside) 
+{
 
 	float inter0 = INFINITY;
 	float inter1 = INFINITY;
