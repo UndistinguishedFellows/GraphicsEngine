@@ -27,6 +27,7 @@ signals:
 	
 private:
 	void initGUI();
+	void renderScene(glm::vec3* image, int width, int height);
 
 
 	// Ray Tracing
