@@ -224,7 +224,8 @@ void RayTracingWindow::render(const std::vector<Sphere> &spheres)
 	delete[] image;
 }
 
-void RayTracingWindow::raytraceScene() {
+void RayTracingWindow::raytraceScene() 
+{
 	std::vector<Sphere> spheres;
 
 	// Lights
@@ -254,7 +255,8 @@ bool RayTracingWindow::intersection(const Sphere &sphere, const Ray& ray, HitInf
 	float inter0 = INFINITY;
 	float inter1 = INFINITY;
 
-	if (sphere.intersect(ray.m_origin, ray.m_direction, inter0, inter1)) {
+	if (sphere.intersect(ray.m_origin, ray.m_direction, inter0, inter1)) 
+	{
 		if (inter0 < 0)
 			inter0 = inter1;
 
@@ -278,14 +280,14 @@ bool RayTracingWindow::intersection(const Sphere &sphere, const Ray& ray, HitInf
 
 		return true;
 	}
-	else {
+	else 
+	{
 		return false;
 	}
 }
 
 glm::vec3 RayTracingWindow::blendReflRefrColors(const Sphere* sphere, const glm::vec3 &raydir, const glm::vec3 &normalHit, const glm::vec3 &reflColor, const glm::vec3 &refrColor) 
 {
-
 	float facingRatio = -glm::dot(raydir, normalHit);
 	float fresnel = 0.5f + pow(1 - facingRatio, 3) * 0.5;
 
