@@ -363,7 +363,7 @@ Ray & RayTracingWindow::CalcRefractionRay(const Ray & ray, const HitInfo & hitIn
 
 float RayTracingWindow::CalcShadowFactor(HitInfo & hitInfo)
 {
-	float shadow = 0.f;
+	float shadow = 1.f;
 
 	for (int l = 0; l < m_lights.size(); ++l)
 	{
