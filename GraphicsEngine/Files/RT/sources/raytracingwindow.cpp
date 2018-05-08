@@ -98,11 +98,11 @@ void RayTracingWindow::renderScene(glm::vec3* image, int width, int height)
 	m_ui.qRayTracingView->show();
 }
 
-glm::vec3 RayTracingWindow::traceRay(const glm::vec3 &rayOrig, const glm::vec3 &rayDir, const std::vector<Sphere> &spheres, const int &depth)
+glm::vec3 RayTracingWindow::traceRay(const Ray& ray, const std::vector<Sphere> &spheres, const int &depth)
 {
 	Sphere* sphere = nullptr;
 	float minDist = INFINITY;
-	glm::vec3 pHit, nHit;
+	HitInfo closestHitInfo;
 
 	std::vector<const Sphere*> lights;
 
@@ -112,19 +112,14 @@ glm::vec3 RayTracingWindow::traceRay(const glm::vec3 &rayOrig, const glm::vec3 &
 
 		if(!it->isLight())
 		{
-			float distanceHit;
-			glm::vec3 surfaceColor;
-			bool inside;
-
-			if (intersection(*it, rayOrig, rayDir, distanceHit, pHit, nHit, surfaceColor, inside))
+			if (intersection(*it, ray, closestHitInfo))
 			{
 				// Calc the distance
-				//float distance = glm::distance(rayOrig, pHit);
-				if (distanceHit < minDist)
+				if (closestHitInfo.m_distanceHit < minDist)
 				{
 					// Assign the closer sphere
 					sphere = (Sphere*)it;
-					minDist = distanceHit;
+					minDist = closestHitInfo.m_distanceHit;
 				}
 			}
 		}
@@ -140,43 +135,36 @@ glm::vec3 RayTracingWindow::traceRay(const glm::vec3 &rayOrig, const glm::vec3 &
 		return mBackgroundColor;
 	}
 
-	// If there's a collision with a sphere calc the shadow
-	//for(auto it : lights)
-	//{
-	//	glm::vec3 shadowRayOrigin = pHit;
-	//	glm::vec3 shadowRayDir = it->getCenter() - pHit;
-	//	bool isShadow;
-	//	
-	//	float distanceHit;
-	//	glm::vec3 colorHit, lHit, lNorm;
-	//	bool inside;
-	//	if(intersection(*it, shadowRayOrigin, shadowRayDir, distanceHit, lHit, /lNorm, /colorHit, inside))
-	//	{
-	//		
-	//	}
-	//}
+	// If there's a collision get the shadow value and calc the resultant color
 
-	const Sphere* light = lights[0];
-	glm::vec3 shadowRayOrigin = pHit;
-	glm::vec3 shadowRayDir = light->getCenter() - pHit;
+	float shadow = 1.f;
 
-	/*for(int i = 0; i < spheres.size(); ++i)
+	for(int l = 0; l < lights.size(); ++l)
 	{
-		if(!spheres[i].isLight())
+		const Sphere* light = lights[l];
+		glm::vec3 shadowRayDir = light->getCenter() - closestHitInfo.m_positionHit;
+		shadowRayDir = glm::normalize(shadowRayDir);
+		glm::vec3 shadowRayOrigin = closestHitInfo.m_positionHit + shadowRayDir * glm::vec3(0.01f);
+
+		for (int i = 0; i < spheres.size(); ++i)
 		{
-			float distanceHit;
-			glm::vec3 colorHit, lHit, lNorm;
-			bool inside;
-			if (intersection(spheres[i], shadowRayOrigin, shadowRayDir, distanceHit, lHit, lNorm, colorHit, inside))
-			{
-				// Shadow
-				return glm::vec3(0.f);
+			if (!spheres[i].isLight())
+			{				
+				Ray shadowRay(shadowRayOrigin, shadowRayDir);
+				HitInfo hitInfo;
+
+				if (intersection(spheres[i], shadowRay, hitInfo) && !hitInfo.m_isInside)
+				{
+					// Shadow
+					shadow -= 0.3f;
+				}
 			}
 		}
-	}*/
+	}
 
+	if (shadow < 0.f) shadow = 0.f;
 
-	return sphere->getSurfaceColor();
+	return sphere->getSurfaceColor() * glm::vec3(shadow);
 }
 
 void RayTracingWindow::render(const std::vector<Sphere> &spheres)
@@ -213,7 +201,9 @@ void RayTracingWindow::render(const std::vector<Sphere> &spheres)
 			glm::vec3 rayDir(xx, yy, -1);
 			rayDir = glm::normalize(rayDir);
 			glm::vec3 rayOrig(0.0f, 0.0f, 0.0f);
-			*pixel = traceRay(rayOrig, rayDir, spheres, 0);
+
+			Ray ray(rayOrig, rayDir);
+			*pixel = traceRay(ray, spheres, 0);
 			
 			progress++;
 
@@ -229,7 +219,7 @@ void RayTracingWindow::render(const std::vector<Sphere> &spheres)
 		}
 	}
 
-	renderScene(image, m_width, m_height);
+	if(!m_renderProgress) renderScene(image, m_width, m_height);
 
 	delete[] image;
 }
@@ -258,33 +248,33 @@ void RayTracingWindow::maxRayDepthChanged(int value)
 	m_maxRayDepth = value;
 }
 
-bool RayTracingWindow::intersection(const Sphere &sphere, const glm::vec3 &rayOrig, const glm::vec3 &rayDir, float &distHit, glm::vec3 &posHit, glm::vec3 &normalHit, glm::vec3 &colorHit, bool &isInside) 
+bool RayTracingWindow::intersection(const Sphere &sphere, const Ray& ray, HitInfo& hitInfo)
 {
 
 	float inter0 = INFINITY;
 	float inter1 = INFINITY;
 
-	if (sphere.intersect(rayOrig, rayDir, inter0, inter1)) {
+	if (sphere.intersect(ray.m_origin, ray.m_direction, inter0, inter1)) {
 		if (inter0 < 0)
 			inter0 = inter1;
 
-		distHit = inter0;
-		posHit = rayOrig + rayDir * inter0;
-		normalHit = posHit - sphere.getCenter();
-		normalHit = glm::normalize(normalHit);
+		hitInfo.m_distanceHit = inter0;
+		hitInfo.m_positionHit = ray.m_origin + ray.m_direction * inter0;
+		hitInfo.m_normalHit = hitInfo.m_positionHit - sphere.getCenter();
+		hitInfo.m_normalHit = glm::normalize(hitInfo.m_normalHit);
 
 		// If the normal and the view direction are not opposite to each other
 		// reverse the normal direction. That also means we are inside the sphere so set
 		// the inside bool to true.
-		isInside = false;
-		float dotProd = glm::dot(rayDir, normalHit);
+		hitInfo.m_isInside = false;
+		float dotProd = glm::dot(ray.m_direction, hitInfo.m_normalHit);
 		
 		if (dotProd > 0) {
-			normalHit = -normalHit; 
-			isInside = true;
+			hitInfo.m_normalHit = -hitInfo.m_normalHit;
+			hitInfo.m_isInside = true;
 		}
 
-		colorHit = sphere.getSurfaceColor();
+		hitInfo.m_colorHit = sphere.getSurfaceColor();
 
 		return true;
 	}
