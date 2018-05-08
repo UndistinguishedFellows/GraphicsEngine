@@ -43,7 +43,9 @@ private:
 	// Screen
 	int m_width;
 	int m_height;
-	glm::vec3 background_color;
+	glm::vec3 mBackgroundColor;
+
+	bool m_renderProgress = true;
 
 	int m_maxRayDepth;
 	

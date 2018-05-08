@@ -20,7 +20,7 @@ RayTracingWindow::RayTracingWindow(MainWindow* mw) : AbstractWindow(mw)
 
 	m_width = m_ui.qRayTracingView->width() - 2;
 	m_height = m_ui.qRayTracingView->height() - 2;
-	background_color = glm::vec3(0.2f);
+	mBackgroundColor = glm::vec3(0.2f);
 
 	m_maxRayDepth = MAX_RAY_DEPTH;
 
@@ -137,7 +137,7 @@ glm::vec3 RayTracingWindow::traceRay(const glm::vec3 &rayOrig, const glm::vec3 &
 	if(!sphere)
 	{
 		// If no collision take the background color
-		return background_color;
+		return mBackgroundColor;
 	}
 
 	// If there's a collision with a sphere calc the shadow
@@ -189,7 +189,7 @@ void RayTracingWindow::render(const std::vector<Sphere> &spheres)
 	{
 		for(int y = 0; y < m_height; ++y, ++pixel)
 		{
-			*pixel = background_color;
+			*pixel = mBackgroundColor;
 		}
 	}
 
@@ -220,7 +220,7 @@ void RayTracingWindow::render(const std::vector<Sphere> &spheres)
 			int percentage = (int)(float)progress / (float)numPixels * 100;
 			emit renderingProgress(percentage);
 
-			if(percentage >= nextPercentageToRender)
+			if(m_renderProgress && percentage >= nextPercentageToRender)
 			{
 				// Each 10% render the image
 				renderScene(image, m_width, m_height);
