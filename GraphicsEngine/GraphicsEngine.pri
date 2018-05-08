@@ -8,6 +8,7 @@ HEADERS += Files/definitions.h \
 			Files/SSAO/headers/ssaoglwidget.h \
 			Files/SSAO/headers/ssaowindow.h \
 			Files/RT/headers/raytracingwindow.h \
+			Files/AbstractWindow.h \
 
 SOURCES += Files/glwidget.cpp \
 			Files/logo.cpp \

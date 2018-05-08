@@ -10,7 +10,8 @@ class AbstractWindow : public QWidget
 	Q_OBJECT
 
 public:
-	AbstractWindow(MainWindow *mw) { mainWindow = mw; };
+	AbstractWindow(MainWindow *mw) { mainWindow = mw; }
+	virtual ~AbstractWindow(){}
 
 protected:
 	virtual void keyPressEvent(QKeyEvent *event) override{}
