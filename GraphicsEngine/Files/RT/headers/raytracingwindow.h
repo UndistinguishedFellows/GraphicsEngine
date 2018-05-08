@@ -41,36 +41,46 @@ public:
 	~RayTracingWindow();
 
 private slots:
-	void dockUndock() override;
-	void raytraceScene();
-	void maxRayDepthChanged(int value);
+	void DockUndock() override;
+	void RaytraceScene();
+	void MaxRayDepthChanged(int value);
+	void Cancel();
+	void ShowRenderProgressChanged(bool value);
 
 signals:
-	void renderingProgress(int);
+	void RenderingProgress(int);
 	
 private:
-	void initGUI();
-	void renderScene(glm::vec3* image, int width, int height);
+	void InitGUI();
+	void RenderIntoTexture(glm::vec3* image, int width, int height);
+	void ClearImage(glm::vec3* image, int width, int height);
 
 
 	// Ray Tracing
-	glm::vec3 traceRay(const Ray& ray, const std::vector<Sphere> &spheres, const int &depth);
+	glm::vec3 TraceRay(const Ray& ray, const int &depth);
 
-	void render(const std::vector<Sphere> &spheres);
+	void Render();
 	
-	bool intersection(const Sphere &sphere, const Ray& ray, HitInfo& hitInfo);
+	bool Intersection(const Sphere &sphere, const Ray& ray, HitInfo& hitInfo);
 
-	glm::vec3 blendReflRefrColors(const Sphere* sphere, const glm::vec3 &rayDir, const glm::vec3 &normalHit, const glm::vec3 &reflColor, const glm::vec3 &refrColor);
+	glm::vec3 BlendReflRefrColors(const Sphere* sphere, const glm::vec3 &rayDir, const glm::vec3 &normalHit, const glm::vec3 &reflColor, const glm::vec3 &refrColor);
 
+
+private:
 	/* Attributes */
 	// Screen
 	int m_width;
 	int m_height;
-	glm::vec3 mBackgroundColor;
+	glm::vec3 m_backgroundColor;
 
 	bool m_renderProgress = false;
 
 	int m_maxRayDepth;
+
+	bool m_cancel = false;
 	
 	Ui::RayTracingWindow m_ui;
+
+	std::vector<Sphere> m_spheres;
+	std::vector<Sphere> m_lights;
 };

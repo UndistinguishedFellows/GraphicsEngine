@@ -16,23 +16,25 @@ RayTracingWindow::RayTracingWindow(MainWindow* mw) : AbstractWindow(mw)
 
 	std::cout << "=== Raytracing window" << std::endl;
 
-	initGUI();
+	InitGUI();
 
 	m_width = m_ui.qRayTracingView->width() - 2;
 	m_height = m_ui.qRayTracingView->height() - 2;
-	mBackgroundColor = glm::vec3(0.2f);
+	m_backgroundColor = glm::vec3(0.2f);
 
 	m_maxRayDepth = MAX_RAY_DEPTH;
 
-	connect(m_ui.qUndockButton, SIGNAL(clicked()), this, SLOT(dockUndock()));
-	connect(m_ui.qRenderButton, SIGNAL(clicked()), this, SLOT(raytraceScene()));
-	connect(this, SIGNAL(renderingProgress(int)), m_ui.qProgressBar, SLOT(setValue(int)));
-	connect(m_ui.maxRayDepthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(maxRayDepthChanged(int)));
+	connect(m_ui.qUndockButton, SIGNAL(clicked()), this, SLOT(DockUndock()));
+	connect(m_ui.qRenderButton, SIGNAL(clicked()), this, SLOT(RaytraceScene()));
+	connect(this, SIGNAL(RenderingProgress(int)), m_ui.qProgressBar, SLOT(setValue(int)));
+	connect(m_ui.maxRayDepthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(MaxRayDepthChanged(int)));
+	connect(m_ui.qCancelButton, SIGNAL(clicked()), this, SLOT(Cancel()));
+	connect(m_ui.qRenderProgressCheckBox, SIGNAL(clicked(bool)), this, SLOT(ShowRenderProgressChanged(bool)));
 }
 
 RayTracingWindow::~RayTracingWindow(){ }
 
-void RayTracingWindow::dockUndock()
+void RayTracingWindow::DockUndock()
 {
 	if (parent()) 
 	{
@@ -66,7 +68,7 @@ void RayTracingWindow::dockUndock()
 	}
 }
 
-void RayTracingWindow::initGUI()
+void RayTracingWindow::InitGUI()
 {
 	QGraphicsScene *scene = new QGraphicsScene();
 	scene->clear();
@@ -77,7 +79,7 @@ void RayTracingWindow::initGUI()
 	m_ui.qRayTracingView->show();
 }
 
-void RayTracingWindow::renderScene(glm::vec3* image, int width, int height)
+void RayTracingWindow::RenderIntoTexture(glm::vec3* image, int width, int height)
 {
 	QImage img(width, height, QImage::Format_ARGB32);
 
@@ -98,21 +100,33 @@ void RayTracingWindow::renderScene(glm::vec3* image, int width, int height)
 	m_ui.qRayTracingView->show();
 }
 
-glm::vec3 RayTracingWindow::traceRay(const Ray& ray, const std::vector<Sphere> &spheres, const int &depth)
+void RayTracingWindow::ClearImage(glm::vec3* image, int width, int height)
+{
+	glm::vec3* pixel = image;
+	for (int x = 0; x < width; ++x)
+	{
+		for (int y = 0; y < height; ++y, ++pixel)
+		{
+			*pixel = m_backgroundColor;
+		}
+	}
+
+	RenderIntoTexture(image, m_width, m_height);
+}
+
+glm::vec3 RayTracingWindow::TraceRay(const Ray& ray, const int &depth)
 {
 	Sphere* sphere = nullptr;
 	float minDist = INFINITY;
 	HitInfo closestHitInfo;
 
-	std::vector<const Sphere*> lights;
-
-	for(int i = 0; i < spheres.size(); ++i)
+	for(int i = 0; i < m_spheres.size(); ++i)
 	{
-		const Sphere* it = &spheres[i];
+		const Sphere* it = &m_spheres[i];
 
 		if(!it->isLight())
 		{
-			if (intersection(*it, ray, closestHitInfo))
+			if (Intersection(*it, ray, closestHitInfo))
 			{
 				// Calc the distance
 				if (closestHitInfo.m_distanceHit < minDist)
@@ -123,37 +137,33 @@ glm::vec3 RayTracingWindow::traceRay(const Ray& ray, const std::vector<Sphere> &
 				}
 			}
 		}
-		else
-		{
-			lights.push_back(it);
-		}
 	}
 
 	if(!sphere)
 	{
 		// If no collision take the background color
-		return mBackgroundColor;
+		return m_backgroundColor;
 	}
 
 	// If there's a collision get the shadow value and calc the resultant color
 
 	float shadow = 1.f;
 
-	for(int l = 0; l < lights.size(); ++l)
+	for(int l = 0; l < m_lights.size(); ++l)
 	{
-		const Sphere* light = lights[l];
+		const Sphere* light = &m_lights[l];
 		glm::vec3 shadowRayDir = light->getCenter() - closestHitInfo.m_positionHit;
 		shadowRayDir = glm::normalize(shadowRayDir);
 		glm::vec3 shadowRayOrigin = closestHitInfo.m_positionHit + shadowRayDir * glm::vec3(0.01f);
 
-		for (int i = 0; i < spheres.size(); ++i)
+		for (int i = 0; i < m_spheres.size(); ++i)
 		{
-			if (!spheres[i].isLight())
+			if (!m_spheres[i].isLight())
 			{				
 				Ray shadowRay(shadowRayOrigin, shadowRayDir);
 				HitInfo hitInfo;
 
-				if (intersection(spheres[i], shadowRay, hitInfo) && !hitInfo.m_isInside)
+				if (Intersection(m_spheres[i], shadowRay, hitInfo) && !hitInfo.m_isInside)
 				{
 					// Shadow
 					shadow -= 0.3f;
@@ -167,21 +177,14 @@ glm::vec3 RayTracingWindow::traceRay(const Ray& ray, const std::vector<Sphere> &
 	return sphere->getSurfaceColor() * glm::vec3(shadow);
 }
 
-void RayTracingWindow::render(const std::vector<Sphere> &spheres)
+void RayTracingWindow::Render()
 {
 	m_width = m_ui.qRayTracingView->width() - 2;
 	m_height = m_ui.qRayTracingView->height() - 2;
 	
 	glm::vec3 *image = new glm::vec3[m_width * m_height], *pixel = image;
-	for(int x = 0; x <m_width; ++x)
-	{
-		for(int y = 0; y < m_height; ++y, ++pixel)
-		{
-			*pixel = mBackgroundColor;
-		}
-	}
-
-	pixel = image;
+	
+	ClearImage(image, m_width, m_height);
 
 	float invWidth = 1 / float(m_width), invHeight = 1 / float(m_height);
 	float fov = 30, aspectratio = m_width / float(m_height);
@@ -196,6 +199,13 @@ void RayTracingWindow::render(const std::vector<Sphere> &spheres)
 	{
 		for (unsigned x = 0; x < m_width; ++x, ++pixel) 
 		{
+			if(m_cancel)
+			{
+				m_cancel = false;
+				ClearImage(image, m_width, m_height);
+				return;
+			}
+
 			float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
 			float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
 			glm::vec3 rayDir(xx, yy, -1);
@@ -203,53 +213,63 @@ void RayTracingWindow::render(const std::vector<Sphere> &spheres)
 			glm::vec3 rayOrig(0.0f, 0.0f, 0.0f);
 
 			Ray ray(rayOrig, rayDir);
-			*pixel = traceRay(ray, spheres, 0);
+			*pixel = TraceRay(ray, 0);
 			
 			progress++;
 
 			int percentage = (int)(float)progress / (float)numPixels * 100;
-			emit renderingProgress(percentage);
+			emit RenderingProgress(percentage);
 
 			if(m_renderProgress && percentage >= nextPercentageToRender)
 			{
 				// Each 10% render the image
-				renderScene(image, m_width, m_height);
+				RenderIntoTexture(image, m_width, m_height);
 				nextPercentageToRender += incrementPercentage;
 			}
 		}
 	}
 
-	if(!m_renderProgress) renderScene(image, m_width, m_height);
+	if(!m_renderProgress) RenderIntoTexture(image, m_width, m_height);
 
 	delete[] image;
 }
 
-void RayTracingWindow::raytraceScene() 
+void RayTracingWindow::RaytraceScene() 
 {
-	std::vector<Sphere> spheres;
+	m_spheres.clear();
+	m_lights.clear();
 
 	// Lights
-	spheres.push_back(Sphere(glm::vec3(10.0f, 20.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
-	spheres.push_back(Sphere(glm::vec3(-10.0f, 20.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
-	spheres.push_back(Sphere(glm::vec3(0.0f, 10.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
+	m_lights.push_back(Sphere(glm::vec3(10.0f, 20.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
+	m_lights.push_back(Sphere(glm::vec3(-10.0f, 20.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
+	m_lights.push_back(Sphere(glm::vec3(0.0f, 10.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
 
 	// Spheres of the scene
-	spheres.push_back(Sphere(glm::vec3(0.0, -10004, -30), 10000, glm::vec3(0.0f, 0.2f, 0.5f), false, 0.0, 0.0));
-	spheres.push_back(Sphere(glm::vec3(0.0f, 0.0f, -20.0f), 2, glm::vec3(1.0f, 1.0f, 1.0f), true, 0.9f, 1.1f));
-	spheres.push_back(Sphere(glm::vec3(4.0f, 0.0f, -32.5f), 4, glm::vec3(0.0f, 0.5f, 0.0f), true, 0.0f, 0.0f));
-	spheres.push_back(Sphere(glm::vec3(-5.0f, 0.0f, -35.0f), 3, glm::vec3(0.5f, 0.5f, 0.5f), true, 0.0f, 0.0f));
-	spheres.push_back(Sphere(glm::vec3(-4.5f, -1.0f, -19.0f), 1.5f, glm::vec3(0.5f, 0.1f, 0.0f), true, 0.0f, 0.0f));
+	m_spheres.push_back(Sphere(glm::vec3(0.0, -10004, -30), 10000, glm::vec3(0.0f, 0.2f, 0.5f), false, 0.0, 0.0));
+	m_spheres.push_back(Sphere(glm::vec3(0.0f, 0.0f, -20.0f), 2, glm::vec3(1.0f, 1.0f, 1.0f), true, 0.9f, 1.1f));
+	m_spheres.push_back(Sphere(glm::vec3(4.0f, 0.0f, -32.5f), 4, glm::vec3(0.0f, 0.5f, 0.0f), true, 0.0f, 0.0f));
+	m_spheres.push_back(Sphere(glm::vec3(-5.0f, 0.0f, -35.0f), 3, glm::vec3(0.5f, 0.5f, 0.5f), true, 0.0f, 0.0f));
+	m_spheres.push_back(Sphere(glm::vec3(-4.5f, -1.0f, -19.0f), 1.5f, glm::vec3(0.5f, 0.1f, 0.0f), true, 0.0f, 0.0f));
 
-	//TODO: UNCOMMENT THE NEXT LINE TO RENDER THE SCENE
-	render(spheres);
+	Render();
 }
 
-void RayTracingWindow::maxRayDepthChanged(int value)
+void RayTracingWindow::MaxRayDepthChanged(int value)
 {
 	m_maxRayDepth = value;
 }
 
-bool RayTracingWindow::intersection(const Sphere &sphere, const Ray& ray, HitInfo& hitInfo)
+void RayTracingWindow::Cancel()
+{
+	m_cancel = true;
+}
+
+void RayTracingWindow::ShowRenderProgressChanged(bool value)
+{
+	m_renderProgress = value;
+}
+
+bool RayTracingWindow::Intersection(const Sphere &sphere, const Ray& ray, HitInfo& hitInfo)
 {
 
 	float inter0 = INFINITY;
@@ -286,7 +306,7 @@ bool RayTracingWindow::intersection(const Sphere &sphere, const Ray& ray, HitInf
 	}
 }
 
-glm::vec3 RayTracingWindow::blendReflRefrColors(const Sphere* sphere, const glm::vec3 &raydir, const glm::vec3 &normalHit, const glm::vec3 &reflColor, const glm::vec3 &refrColor) 
+glm::vec3 RayTracingWindow::BlendReflRefrColors(const Sphere* sphere, const glm::vec3 &raydir, const glm::vec3 &normalHit, const glm::vec3 &reflColor, const glm::vec3 &refrColor) 
 {
 	float facingRatio = -glm::dot(raydir, normalHit);
 	float fresnel = 0.5f + pow(1 - facingRatio, 3) * 0.5;
