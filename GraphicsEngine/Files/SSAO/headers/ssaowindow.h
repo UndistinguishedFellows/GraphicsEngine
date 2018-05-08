@@ -14,7 +14,7 @@ public:
 	~SSAOWindow();
 
 private slots:
-	void dockUndock() override;
+	void DockUndock() override;
 	void selectCameraType(int index);
 	void cameraSpeedChanged(double value);
 	void znearChanged(double value);

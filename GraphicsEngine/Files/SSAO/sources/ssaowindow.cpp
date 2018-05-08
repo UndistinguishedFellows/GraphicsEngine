@@ -57,7 +57,7 @@ SSAOWindow::~SSAOWindow()
 		
 }
 
-void SSAOWindow::dockUndock()
+void SSAOWindow::DockUndock()
 {
 	if (parent()) {
 		setParent(0);
