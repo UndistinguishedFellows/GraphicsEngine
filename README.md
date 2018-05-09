@@ -13,4 +13,4 @@ Mouse + Right click to rotate
 
 
 ## WIP Raytracing
-![WIP Raytracing](https://bitbucket.org/Josef21296/various-resources/raw/5549175843c80874f44320b01aa4783e4016f33b/Pictures/GraphicsEngine/ray_tracing.gif)
+![WIP: Raytracing](https://bitbucket.org/Josef21296/various-resources/raw/5549175843c80874f44320b01aa4783e4016f33b/Pictures/GraphicsEngine/ray_tracing.gif)
