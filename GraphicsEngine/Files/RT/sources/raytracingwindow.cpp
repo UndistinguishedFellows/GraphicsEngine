@@ -170,7 +170,6 @@ glm::vec3 RayTracingWindow::TraceRay(const Ray& ray, const int &depth)
 	}
 
 
-	float shadow = 1.f;
 
 	if(sphere->reflectsLight() && sphere->refractsLight())
 	{
@@ -190,11 +189,13 @@ glm::vec3 RayTracingWindow::TraceRay(const Ray& ray, const int &depth)
 	else
 	{
 		// Diffuse object
-		shadow = CalcShadowFactor(closestHitInfo);
+		float shadow = CalcShadowFactor(closestHitInfo);
 
 		colorRay = sphere->getSurfaceColor() * glm::vec3(shadow);
 	}
 
+
+	const float blendValue = 1.f - (depth / m_maxRayDepth);
 
 	return colorRay;// + sphere->getSurfaceColor() * sphere->getLightColor();
 }
