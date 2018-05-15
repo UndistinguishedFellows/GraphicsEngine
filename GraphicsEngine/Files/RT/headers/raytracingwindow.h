@@ -57,7 +57,7 @@ private:
 
 
 	// Ray Tracing
-	glm::vec3 TraceRay(const Ray& ray, const int &depth);
+	glm::vec3 TraceRay(Ray& ray, const int &depth);
 
 	void Render();
 	

@@ -20,7 +20,7 @@ RayTracingWindow::RayTracingWindow(MainWindow* mw) : AbstractWindow(mw)
 
 	m_width = m_ui.qRayTracingView->width() - 2;
 	m_height = m_ui.qRayTracingView->height() - 2;
-	m_backgroundColor = glm::vec3(0.2f);
+	m_backgroundColor = glm::vec3(0.9f);
 
 	m_maxRayDepth = MAX_RAY_DEPTH;
 
@@ -116,8 +116,10 @@ void RayTracingWindow::ClearImage(glm::vec3* image, int width, int height)
 	RenderIntoTexture(image, m_width, m_height);
 }
 
-glm::vec3 RayTracingWindow::TraceRay(const Ray& ray, const int &depth)
+glm::vec3 RayTracingWindow::TraceRay(Ray& ray, const int &depth)
 {
+	ray.m_direction = glm::normalize(ray.m_direction);
+
 	Sphere* sphere = nullptr;
 	float minDist = INFINITY;
 	HitInfo closestHitInfo;
@@ -156,7 +158,7 @@ glm::vec3 RayTracingWindow::TraceRay(const Ray& ray, const int &depth)
 	if(sphere->reflectsLight() && depth < m_maxRayDepth)
 	{
 		// Calc reflection ray
-		const Ray reflectRay = CalcReflectionRay(ray, closestHitInfo);
+		Ray reflectRay = CalcReflectionRay(ray, closestHitInfo);
 
 		reflColor = TraceRay(reflectRay, depth + 1);
 	}
@@ -164,9 +166,9 @@ glm::vec3 RayTracingWindow::TraceRay(const Ray& ray, const int &depth)
 	if(sphere->refractsLight() && depth < m_maxRayDepth)
 	{
 		// Calc refraction ray
-		const Ray refractionRay = CalcRefractionRay(ray, closestHitInfo, sphere);
+		Ray refractionRay = CalcRefractionRay(ray, closestHitInfo, sphere);
 
-		refrColor = /*sphere->transparencyFactor() */ TraceRay(refractionRay, depth + 1);
+		refrColor = TraceRay(refractionRay, depth + 1);
 	}
 
 
@@ -174,30 +176,31 @@ glm::vec3 RayTracingWindow::TraceRay(const Ray& ray, const int &depth)
 	if(sphere->reflectsLight() && sphere->refractsLight())
 	{
 		// Calc blend color
+
 		colorRay = BlendReflRefrColors(sphere, ray.m_direction, closestHitInfo.m_normalHit, reflColor, refrColor);
 	}
 	else if(sphere->reflectsLight())
 	{
 		// Result color is the reflection color result
-		colorRay = reflColor;
+
+		colorRay = reflColor * sphere->getSurfaceColor();
 	}
 	else if(sphere->refractsLight())
 	{
 		// Result color is the refrection color result
+
 		colorRay = refrColor;
 	}
 	else
 	{
 		// Diffuse object
+
 		float shadow = CalcShadowFactor(closestHitInfo);
 
 		colorRay = sphere->getSurfaceColor() * glm::vec3(shadow);
 	}
 
-
-	const float blendValue = 1.f - (depth / m_maxRayDepth);
-
-	return colorRay;// + sphere->getSurfaceColor() * sphere->getLightColor();
+	return colorRay + sphere->getLightColor() * sphere->emissionFactor(); 
 }
 
 void RayTracingWindow::Render()
@@ -334,7 +337,7 @@ glm::vec3 RayTracingWindow::BlendReflRefrColors(const Sphere* sphere, const glm:
 	float facingRatio = -glm::dot(raydir, normalHit);
 	float fresnel = 0.5f + pow(1 - facingRatio, 3) * 0.5;
 
-	glm::vec3 blendedColor = (reflColor * fresnel + refrColor * (1 - fresnel) * sphere->transparencyFactor())*sphere->getSurfaceColor();
+	glm::vec3 blendedColor = (reflColor * fresnel + refrColor * (1 - fresnel) * sphere->transparencyFactor()) * sphere->getSurfaceColor();
 	return blendedColor;
 }
 
@@ -343,6 +346,8 @@ Ray & RayTracingWindow::CalcReflectionRay(const Ray & ray, const HitInfo & hitIn
 	Ray reflection;
 
 	reflection.m_direction = glm::reflect(ray.m_origin + ray.m_direction, hitInfo.m_normalHit);
+
+	reflection.m_direction = glm::normalize(reflection.m_direction);
 
 	glm::vec3 epsilon = reflection.m_direction * glm::vec3(m_epsilonFactor);
 	reflection.m_origin = hitInfo.m_positionHit + (hitInfo.m_isInside ? -epsilon : epsilon);
@@ -355,6 +360,8 @@ Ray & RayTracingWindow::CalcRefractionRay(const Ray & ray, const HitInfo & hitIn
 	Ray refraction;
 
 	refraction.m_direction = glm::refract(ray.m_origin + ray.m_direction, hitInfo.m_normalHit, (hitInfo.m_isInside ? 1.f / sphere->getRefractionIndex() : sphere->getRefractionIndex()));
+
+	refraction.m_direction = glm::normalize(refraction.m_direction);
 
 	glm::vec3 epsilon = refraction.m_direction * glm::vec3(m_epsilonFactor);
 	refraction.m_origin = hitInfo.m_positionHit + (hitInfo.m_isInside ? -epsilon : epsilon);
