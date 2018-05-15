@@ -88,7 +88,7 @@ private:
 	std::vector<Sphere> m_spheres;
 	std::vector<Sphere> m_lights;
 
-	float m_epsilonFactor = 0.1f;
+	float m_epsilonFactor;
 };
 
 typedef glm::vec3 Color;

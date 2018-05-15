@@ -22,6 +22,8 @@ RayTracingWindow::RayTracingWindow(MainWindow* mw) : AbstractWindow(mw)
 	m_height = m_ui.qRayTracingView->height() - 2;
 	m_backgroundColor = glm::vec3(0.9f);
 
+	m_epsilonFactor = 0.001f;
+
 	m_maxRayDepth = MAX_RAY_DEPTH;
 
 	m_ui.maxRayDepthSpinBox->setValue(m_maxRayDepth);
@@ -345,11 +347,11 @@ Ray & RayTracingWindow::CalcReflectionRay(const Ray & ray, const HitInfo & hitIn
 {
 	Ray reflection;
 
-	reflection.m_direction = glm::reflect(ray.m_origin + ray.m_direction, hitInfo.m_normalHit);
+	reflection.m_direction = glm::reflect(ray.m_direction, hitInfo.m_normalHit);
 
 	reflection.m_direction = glm::normalize(reflection.m_direction);
 
-	glm::vec3 epsilon = reflection.m_direction * glm::vec3(m_epsilonFactor);
+	glm::vec3 epsilon = hitInfo.m_normalHit * glm::vec3(m_epsilonFactor);
 	reflection.m_origin = hitInfo.m_positionHit + (hitInfo.m_isInside ? -epsilon : epsilon);
 
 	return reflection;
@@ -359,11 +361,11 @@ Ray & RayTracingWindow::CalcRefractionRay(const Ray & ray, const HitInfo & hitIn
 {
 	Ray refraction;
 
-	refraction.m_direction = glm::refract(ray.m_origin + ray.m_direction, hitInfo.m_normalHit, (hitInfo.m_isInside ? 1.f / sphere->getRefractionIndex() : sphere->getRefractionIndex()));
+	float index = hitInfo.m_isInside ? 1.f / sphere->getRefractionIndex() : sphere->getRefractionIndex();
 
-	refraction.m_direction = glm::normalize(refraction.m_direction);
+	refraction.m_direction = glm::normalize(glm::refract(ray.m_direction, hitInfo.m_normalHit, index));
 
-	glm::vec3 epsilon = refraction.m_direction * glm::vec3(m_epsilonFactor);
+	glm::vec3 epsilon = hitInfo.m_normalHit * glm::vec3(m_epsilonFactor);
 	refraction.m_origin = hitInfo.m_positionHit + (hitInfo.m_isInside ? -epsilon : epsilon);
 
 	return refraction;
@@ -378,7 +380,7 @@ float RayTracingWindow::CalcShadowFactor(HitInfo & hitInfo)
 		const Sphere* light = &m_lights[l];
 		Ray shadowRay;
 		shadowRay.m_direction = glm::normalize(light->getCenter() - hitInfo.m_positionHit);
-		const glm::vec3 epsilon = shadowRay.m_direction * glm::vec3(m_epsilonFactor);
+		const glm::vec3 epsilon = hitInfo.m_normalHit * glm::vec3(m_epsilonFactor);
 		shadowRay.m_origin = hitInfo.m_positionHit + (hitInfo.m_isInside ? -epsilon : epsilon);
 
 		for (int i = 0; i < m_spheres.size(); ++i)
