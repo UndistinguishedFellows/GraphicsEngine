@@ -118,7 +118,7 @@ void RayTracingWindow::ClearImage(glm::vec3* image, int width, int height)
 	RenderIntoTexture(image, m_width, m_height);
 }
 
-glm::vec3 RayTracingWindow::TraceRay(Ray& ray, const int &depth)
+Color RayTracingWindow::TraceRay(Ray& ray, const int &depth)const
 {
 	ray.m_direction = glm::normalize(ray.m_direction);
 
@@ -285,7 +285,7 @@ void RayTracingWindow::ShowRenderProgressChanged(bool value)
 	m_renderProgress = value;
 }
 
-bool RayTracingWindow::Intersection(const Sphere &sphere, const Ray& ray, HitInfo& hitInfo)
+bool RayTracingWindow::Intersection(const Sphere &sphere, const Ray& ray, HitInfo& hitInfo)const
 {
 
 	float inter0 = INFINITY;
@@ -322,16 +322,16 @@ bool RayTracingWindow::Intersection(const Sphere &sphere, const Ray& ray, HitInf
 	}
 }
 
-glm::vec3 RayTracingWindow::BlendReflRefrColors(const Sphere* sphere, const glm::vec3 &raydir, const glm::vec3 &normalHit, const glm::vec3 &reflColor, const glm::vec3 &refrColor) 
+Color& RayTracingWindow::BlendReflRefrColors(const Sphere* sphere, const glm::vec3 &raydir, const glm::vec3 &normalHit, const Color &reflColor, const Color &refrColor)const
 {
-	float facingRatio = -glm::dot(raydir, normalHit);
-	float fresnel = 0.5f + pow(1 - facingRatio, 3) * 0.5;
+	const float facingRatio = -glm::dot(raydir, normalHit);
+	const float fresnel = 0.5f + pow(1 - facingRatio, 3) * 0.5;
 
-	glm::vec3 blendedColor = (reflColor * fresnel + refrColor * (1 - fresnel) * sphere->transparencyFactor()) * sphere->getSurfaceColor();
-	return blendedColor;
+	Color blendColor = (reflColor * fresnel + refrColor * (1 - fresnel) * sphere->transparencyFactor()) * sphere->getSurfaceColor();
+	return blendColor;
 }
 
-Ray & RayTracingWindow::CalcReflectionRay(const Ray & ray, const HitInfo & hitInfo)
+Ray & RayTracingWindow::CalcReflectionRay(const Ray & ray, const HitInfo & hitInfo)const
 {
 	Ray reflection;
 
@@ -343,7 +343,7 @@ Ray & RayTracingWindow::CalcReflectionRay(const Ray & ray, const HitInfo & hitIn
 	return reflection;
 }
 
-Ray & RayTracingWindow::CalcRefractionRay(const Ray & ray, const HitInfo & hitInfo, const Sphere * sphere)
+Ray & RayTracingWindow::CalcRefractionRay(const Ray & ray, const HitInfo & hitInfo, const Sphere * sphere)const
 {
 	Ray refraction;
 
@@ -357,7 +357,7 @@ Ray & RayTracingWindow::CalcRefractionRay(const Ray & ray, const HitInfo & hitIn
 	return refraction;
 }
 
-Color& RayTracingWindow::CalcDiffuseColor(HitInfo& hitInfo, Sphere* sphere)
+Color& RayTracingWindow::CalcDiffuseColor(HitInfo& hitInfo, Sphere* sphere)const
 {
 	Color diffuse(0.f);
 

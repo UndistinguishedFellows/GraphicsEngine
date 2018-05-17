@@ -59,17 +59,17 @@ private:
 
 
 	// Ray Tracing
-	glm::vec3 TraceRay(Ray& ray, const int &depth);
+	Color TraceRay(Ray& ray, const int &depth)const;
 
 	void Render();
 	
-	bool Intersection(const Sphere &sphere, const Ray& ray, HitInfo& hitInfo);
+	bool Intersection(const Sphere &sphere, const Ray& ray, HitInfo& hitInfo)const;
 
-	glm::vec3 BlendReflRefrColors(const Sphere* sphere, const glm::vec3 &rayDir, const glm::vec3 &normalHit, const glm::vec3 &reflColor, const glm::vec3 &refrColor);
+	Color& BlendReflRefrColors(const Sphere* sphere, const glm::vec3 &rayDir, const glm::vec3 &normalHit, const Color &reflColor, const Color &refrColor)const;
 
-	Ray& CalcReflectionRay(const Ray& ray, const HitInfo& hitInfo);
-	Ray& CalcRefractionRay(const Ray& ray, const HitInfo& hitInfo, const Sphere* sphere);
-	Color& CalcDiffuseColor(HitInfo& hitInfo, Sphere* sphere);
+	Ray& CalcReflectionRay(const Ray& ray, const HitInfo& hitInfo)const;
+	Ray& CalcRefractionRay(const Ray& ray, const HitInfo& hitInfo, const Sphere* sphere)const;
+	Color& CalcDiffuseColor(HitInfo& hitInfo, Sphere* sphere)const;
 
 
 private:
