@@ -151,6 +151,12 @@ glm::vec3 RayTracingWindow::TraceRay(Ray& ray, const int &depth)
 		return m_backgroundColor;
 	}
 
+	if (sphere->isLight())
+	{
+		// If the closest intersection is a light return its color
+		return sphere->getLightColor(); // *sphere->emissionFactor();
+	}
+
 	// ---------------------------------------
 
 	Color colorRay(0.f);
@@ -382,7 +388,7 @@ Color& RayTracingWindow::CalcDiffuseColor(HitInfo& hitInfo, Sphere* sphere)
 				}
 			}
 
-			diffuse += sphere->getSurfaceColor() * invShadow * std::max(0.f, glm::dot(hitInfo.m_normalHit, shadowRay.m_direction)) * light->getLightColor();
+			diffuse += sphere->getSurfaceColor() * invShadow * std::max(0.f, glm::dot(hitInfo.m_normalHit, shadowRay.m_direction)) * light->getLightColor() * light->emissionFactor();
 		}
 	}
 
