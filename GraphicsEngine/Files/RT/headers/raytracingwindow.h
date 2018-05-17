@@ -8,6 +8,8 @@
 
 class MainWindow;
 
+typedef glm::vec3 Color;
+
 struct Ray
 {
 	Ray() : m_origin(glm::vec3(0.f)), m_direction(glm::vec3(0.f))
@@ -67,7 +69,7 @@ private:
 
 	Ray& CalcReflectionRay(const Ray& ray, const HitInfo& hitInfo);
 	Ray& CalcRefractionRay(const Ray& ray, const HitInfo& hitInfo, const Sphere* sphere);
-	float CalcShadowFactor(HitInfo& hitInfo);
+	Color& CalcDiffuseColor(HitInfo& hitInfo, Sphere* sphere);
 
 
 private:
@@ -86,9 +88,6 @@ private:
 	Ui::RayTracingWindow m_ui;
 
 	std::vector<Sphere> m_spheres;
-	std::vector<Sphere> m_lights;
 
 	float m_epsilonFactor;
 };
-
-typedef glm::vec3 Color;

@@ -22,7 +22,7 @@ RayTracingWindow::RayTracingWindow(MainWindow* mw) : AbstractWindow(mw)
 	m_height = m_ui.qRayTracingView->height() - 2;
 	m_backgroundColor = glm::vec3(0.9f);
 
-	m_epsilonFactor = 0.001f;
+	m_epsilonFactor = 1e-4f;
 
 	m_maxRayDepth = MAX_RAY_DEPTH;
 
@@ -153,54 +153,36 @@ glm::vec3 RayTracingWindow::TraceRay(Ray& ray, const int &depth)
 
 	// ---------------------------------------
 
-	Color reflColor = Color(0.f);
-	Color refrColor = Color(0.f);
-	Color colorRay = Color(0.f);
+	Color colorRay(0.f);
 
-	if(sphere->reflectsLight() && depth < m_maxRayDepth)
+	if((sphere->refractsLight() || sphere->reflectsLight()) && depth < m_maxRayDepth)
 	{
-		// Calc reflection ray
+		// Reflection
 		Ray reflectRay = CalcReflectionRay(ray, closestHitInfo);
 
-		reflColor = TraceRay(reflectRay, depth + 1);
-	}
-	
-	if(sphere->refractsLight() && depth < m_maxRayDepth)
-	{
-		// Calc refraction ray
-		Ray refractionRay = CalcRefractionRay(ray, closestHitInfo, sphere);
-
-		refrColor = TraceRay(refractionRay, depth + 1);
-	}
+		const Color reflColor = TraceRay(reflectRay, depth + 1);
 
 
+		// Refraction
+		Color refrColor(0.f);
 
-	if(sphere->reflectsLight() && sphere->refractsLight())
-	{
-		// Calc blend color
+		if (sphere->refractsLight())
+		{
+			// Calc refraction ray
+			Ray refractionRay = CalcRefractionRay(ray, closestHitInfo, sphere);
+
+			refrColor = TraceRay(refractionRay, depth + 1);
+		}
 
 		colorRay = BlendReflRefrColors(sphere, ray.m_direction, closestHitInfo.m_normalHit, reflColor, refrColor);
-	}
-	else if(sphere->reflectsLight())
-	{
-		// Result color is the reflection color result
-
-		colorRay = reflColor * sphere->getSurfaceColor();
-	}
-	else if(sphere->refractsLight())
-	{
-		// Result color is the refrection color result
-
-		colorRay = refrColor;
 	}
 	else
 	{
 		// Diffuse object
 
-		float shadow = CalcShadowFactor(closestHitInfo);
-
-		colorRay = sphere->getSurfaceColor() * glm::vec3(shadow);
+		colorRay = CalcDiffuseColor(closestHitInfo, sphere);
 	}
+
 
 	return colorRay + sphere->getLightColor() * sphere->emissionFactor(); 
 }
@@ -265,12 +247,12 @@ void RayTracingWindow::Render()
 void RayTracingWindow::RaytraceScene() 
 {
 	m_spheres.clear();
-	m_lights.clear();
+	//m_lights.clear();
 
 	// Lights
-	m_lights.push_back(Sphere(glm::vec3(10.0f, 20.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
-	m_lights.push_back(Sphere(glm::vec3(-10.0f, 20.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
-	m_lights.push_back(Sphere(glm::vec3(0.0f, 10.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
+	m_spheres.push_back(Sphere(glm::vec3(10.0f, 20.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
+	m_spheres.push_back(Sphere(glm::vec3(-10.0f, 20.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
+	m_spheres.push_back(Sphere(glm::vec3(0.0f, 10.0f, 0.0f), 2, glm::vec3(0.0f, 0.0f, 0.0f), false, 0.0f, 0.0f, 2.0f, glm::vec3(1.0f, 1.0f, 1.0f)));
 
 	// Spheres of the scene
 	m_spheres.push_back(Sphere(glm::vec3(0.0, -10004, -30), 10000, glm::vec3(0.0f, 0.2f, 0.5f), false, 0.0, 0.0));
@@ -347,12 +329,10 @@ Ray & RayTracingWindow::CalcReflectionRay(const Ray & ray, const HitInfo & hitIn
 {
 	Ray reflection;
 
-	reflection.m_direction = glm::reflect(ray.m_direction, hitInfo.m_normalHit);
+	reflection.m_direction = glm::normalize(glm::reflect(ray.m_direction, hitInfo.m_normalHit));
 
-	reflection.m_direction = glm::normalize(reflection.m_direction);
-
-	glm::vec3 epsilon = hitInfo.m_normalHit * glm::vec3(m_epsilonFactor);
-	reflection.m_origin = hitInfo.m_positionHit + (hitInfo.m_isInside ? -epsilon : epsilon);
+	glm::vec3 epsilon = hitInfo.m_normalHit * m_epsilonFactor;
+	reflection.m_origin = hitInfo.m_positionHit + epsilon;// +(hitInfo.m_isInside ? -epsilon : epsilon);
 
 	return reflection;
 }
@@ -361,46 +341,50 @@ Ray & RayTracingWindow::CalcRefractionRay(const Ray & ray, const HitInfo & hitIn
 {
 	Ray refraction;
 
-	float index = hitInfo.m_isInside ? 1.f / sphere->getRefractionIndex() : sphere->getRefractionIndex();
+	float index = hitInfo.m_isInside ? sphere->getRefractionIndex() : 1.f / sphere->getRefractionIndex();
 
 	refraction.m_direction = glm::normalize(glm::refract(ray.m_direction, hitInfo.m_normalHit, index));
 
-	glm::vec3 epsilon = hitInfo.m_normalHit * glm::vec3(m_epsilonFactor);
-	refraction.m_origin = hitInfo.m_positionHit + (hitInfo.m_isInside ? -epsilon : epsilon);
+	glm::vec3 epsilon = hitInfo.m_normalHit * m_epsilonFactor;
+	refraction.m_origin = hitInfo.m_positionHit - epsilon;// +(hitInfo.m_isInside ? -epsilon : epsilon);
 
 	return refraction;
 }
 
-float RayTracingWindow::CalcShadowFactor(HitInfo & hitInfo)
+Color& RayTracingWindow::CalcDiffuseColor(HitInfo& hitInfo, Sphere* sphere)
 {
-	float shadow = 1.f;
+	Color diffuse(0.f);
 
-	for (int l = 0; l < m_lights.size(); ++l)
+	for (int l = 0; l < m_spheres.size(); ++l)
 	{
-		const Sphere* light = &m_lights[l];
-		Ray shadowRay;
-		shadowRay.m_direction = glm::normalize(light->getCenter() - hitInfo.m_positionHit);
-		const glm::vec3 epsilon = hitInfo.m_normalHit * glm::vec3(m_epsilonFactor);
-		shadowRay.m_origin = hitInfo.m_positionHit + (hitInfo.m_isInside ? -epsilon : epsilon);
+		const Sphere* light = &m_spheres[l];
 
-		for (int i = 0; i < m_spheres.size(); ++i)
+		if(light->isLight())
 		{
-			if (!m_spheres[i].isLight())
-			{
-				HitInfo shadowHitInfo;
+			Ray shadowRay;
+			shadowRay.m_direction = glm::normalize(light->getCenter() - hitInfo.m_positionHit);
+			const glm::vec3 epsilon = hitInfo.m_normalHit * m_epsilonFactor;
+			shadowRay.m_origin = hitInfo.m_positionHit + (hitInfo.m_isInside ? -epsilon : epsilon);
 
-				if (Intersection(m_spheres[i], shadowRay, shadowHitInfo) && !shadowHitInfo.m_isInside)
+			float invShadow = 1.f;
+
+			for (int i = 0; i < m_spheres.size(); ++i)
+			{
+				if (!m_spheres[i].isLight())
 				{
-					// TMP
-					//return Color(0.f);
-					// Shadow increment
-					shadow -= 0.3f;
+					HitInfo shadowHitInfo;
+
+					if (Intersection(m_spheres[i], shadowRay, shadowHitInfo))
+					{
+						invShadow = 0.f;
+						break;
+					}
 				}
 			}
+
+			diffuse += sphere->getSurfaceColor() * invShadow * std::max(0.f, glm::dot(hitInfo.m_normalHit, shadowRay.m_direction)) * light->getLightColor();
 		}
 	}
 
-	if (shadow < 0.f) shadow = 0.f;
-
-	return shadow;
+	return diffuse;
 }
