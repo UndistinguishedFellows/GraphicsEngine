@@ -32,7 +32,6 @@ RayTracingWindow::RayTracingWindow(MainWindow* mw) : AbstractWindow(mw)
 	connect(m_ui.qRenderButton, SIGNAL(clicked()), this, SLOT(RaytraceScene()));
 	connect(this, SIGNAL(RenderingProgress(int)), m_ui.qProgressBar, SLOT(setValue(int)));
 	connect(m_ui.maxRayDepthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(MaxRayDepthChanged(int)));
-	connect(m_ui.qCancelButton, SIGNAL(clicked()), this, SLOT(Cancel()));
 	connect(m_ui.qRenderProgressCheckBox, SIGNAL(clicked(bool)), this, SLOT(ShowRenderProgressChanged(bool)));
 }
 
@@ -215,13 +214,6 @@ void RayTracingWindow::Render()
 	{
 		for (unsigned x = 0; x < m_width; ++x, ++pixel) 
 		{
-			if(m_cancel)
-			{
-				m_cancel = false;
-				ClearImage(image, m_width, m_height);
-				return;
-			}
-
 			float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
 			float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
 			glm::vec3 rayDir(xx, yy, -1);
@@ -273,11 +265,6 @@ void RayTracingWindow::RaytraceScene()
 void RayTracingWindow::MaxRayDepthChanged(int value)
 {
 	m_maxRayDepth = value;
-}
-
-void RayTracingWindow::Cancel()
-{
-	m_cancel = true;
 }
 
 void RayTracingWindow::ShowRenderProgressChanged(bool value)

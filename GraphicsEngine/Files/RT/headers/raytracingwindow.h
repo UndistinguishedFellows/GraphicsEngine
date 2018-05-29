@@ -46,7 +46,6 @@ private slots:
 	void DockUndock() override;
 	void RaytraceScene();
 	void MaxRayDepthChanged(int value);
-	void Cancel();
 	void ShowRenderProgressChanged(bool value);
 
 signals:
@@ -82,8 +81,6 @@ private:
 	bool m_renderProgress = false;
 
 	int m_maxRayDepth;
-
-	bool m_cancel = false;
 	
 	Ui::RayTracingWindow m_ui;
 
