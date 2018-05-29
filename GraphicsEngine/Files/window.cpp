@@ -87,7 +87,7 @@ Window::Window(MainWindow *mw) : AbstractWindow(mw)
 	w->setLayout(container);
 	mainLayout->addWidget(w);
 	dockBtn = new QPushButton(tr("Undock"), this);
-	connect(dockBtn, &QPushButton::clicked, this, &Window::dockUndock);
+	connect(dockBtn, &QPushButton::clicked, this, &Window::DockUndock);
 	mainLayout->addWidget(dockBtn);
 
 	setLayout(mainLayout);
@@ -118,7 +118,7 @@ void Window::keyPressEvent(QKeyEvent *e)
         QWidget::keyPressEvent(e);
 }
 
-void Window::dockUndock()
+void Window::DockUndock()
 {
     if (parent()) 
 	{

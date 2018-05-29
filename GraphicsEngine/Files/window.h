@@ -72,7 +72,7 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
-    void dockUndock() override;
+    void DockUndock() override;
 
 private:
     QSlider *createSlider();

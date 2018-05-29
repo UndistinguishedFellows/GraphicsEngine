@@ -93,7 +93,7 @@ void MainWindow::onAddNew()
 		AbstractWindow* absWindow = dynamic_cast<AbstractWindow*>(centralWidget());
 		if (absWindow != nullptr)
 		{
-			absWindow->dockUndock();
+			absWindow->DockUndock();
 		}
 		setCentralWidget(new Window(this));
 	}
@@ -109,7 +109,7 @@ void MainWindow::onAddSSAOGlWidget()
 		AbstractWindow* absWindow = dynamic_cast<AbstractWindow*>(centralWidget());
 		if (absWindow != nullptr)
 		{
-			absWindow->dockUndock();
+			absWindow->DockUndock();
 		}
 		setCentralWidget(new SSAOWindow(this));
 	}
@@ -124,7 +124,7 @@ void MainWindow::onAddRayTraceWindow()
 		AbstractWindow* absWindow = dynamic_cast<AbstractWindow*>(centralWidget());
 		if (absWindow != nullptr)
 		{
-			absWindow->dockUndock();
+			absWindow->DockUndock();
 		}
 		setCentralWidget(new RayTracingWindow(this));
 	}

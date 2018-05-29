@@ -17,7 +17,7 @@ protected:
 	virtual void keyPressEvent(QKeyEvent *event) override{}
 
 public slots:
-	virtual void dockUndock() = 0;
+	virtual void DockUndock() = 0;
 
 protected:
 	MainWindow *mainWindow;
