@@ -48,6 +48,7 @@ private slots:
 	void MaxRayDepthChanged(int value);
 	void Cancel();
 	void ShowRenderProgressChanged(bool value);
+	void OnSave();
 
 signals:
 	void RenderingProgress(int);
@@ -70,7 +71,7 @@ private:
 	Ray& CalcReflectionRay(const Ray& ray, const HitInfo& hitInfo)const;
 	Ray& CalcRefractionRay(const Ray& ray, const HitInfo& hitInfo, const Sphere* sphere)const;
 	Color& CalcDiffuseColor(HitInfo& hitInfo, Sphere* sphere)const;
-
+	
 
 private:
 	/* Attributes */

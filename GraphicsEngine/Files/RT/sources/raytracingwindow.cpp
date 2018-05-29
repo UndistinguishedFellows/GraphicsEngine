@@ -32,8 +32,9 @@ RayTracingWindow::RayTracingWindow(MainWindow* mw) : AbstractWindow(mw)
 	connect(m_ui.qRenderButton, SIGNAL(clicked()), this, SLOT(RaytraceScene()));
 	connect(this, SIGNAL(RenderingProgress(int)), m_ui.qProgressBar, SLOT(setValue(int)));
 	connect(m_ui.maxRayDepthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(MaxRayDepthChanged(int)));
-	connect(m_ui.qCancelButton, SIGNAL(clicked()), this, SLOT(Cancel()));
+	//connect(m_ui.qCancelButton, SIGNAL(clicked()), this, SLOT(Cancel()));
 	connect(m_ui.qRenderProgressCheckBox, SIGNAL(clicked(bool)), this, SLOT(ShowRenderProgressChanged(bool)));
+	connect(m_ui.qSaveToTexture, SIGNAL(clicked()), this, SLOT(OnSave()));
 }
 
 RayTracingWindow::~RayTracingWindow(){ }
@@ -393,4 +394,13 @@ Color& RayTracingWindow::CalcDiffuseColor(HitInfo& hitInfo, Sphere* sphere)const
 	}
 
 	return diffuse;
+}
+
+void RayTracingWindow::OnSave()
+{
+	// Get the file path
+	QString path = QFileDialog::getSaveFileName(this, tr("Save RT"), tr("RT.png"), tr("PNG(*.png);;JPG(*.jpg)"));
+	std::cout << path.toStdString();
+	m_ui.qRayTracingView->grab().scaled(m_width, m_height).save(path);
+
 }

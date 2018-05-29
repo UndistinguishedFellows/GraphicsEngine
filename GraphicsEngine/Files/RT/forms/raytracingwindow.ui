@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>520</width>
-    <height>604</height>
+    <height>606</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,7 +60,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QPushButton" name="qCancelButton">
+     <widget class="QPushButton" name="qSaveToTexture">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -71,7 +71,7 @@
        <string>This option is not working currently</string>
       </property>
       <property name="text">
-       <string>Cancel Render</string>
+       <string>Save Image</string>
       </property>
      </widget>
     </widget>
