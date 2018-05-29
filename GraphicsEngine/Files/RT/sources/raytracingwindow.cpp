@@ -150,11 +150,11 @@ Color RayTracingWindow::TraceRay(Ray& ray, const int &depth)const
 		return m_backgroundColor;
 	}
 
-	if (sphere->isLight())
+	/*if (sphere->isLight())
 	{
 		// If the closest intersection is a light return its color
 		return sphere->getLightColor(); // *sphere->emissionFactor();
-	}
+	}*/
 
 	// ---------------------------------------
 
@@ -325,7 +325,7 @@ Ray & RayTracingWindow::CalcReflectionRay(const Ray & ray, const HitInfo & hitIn
 	reflection.m_direction = glm::normalize(glm::reflect(ray.m_direction, hitInfo.m_normalHit));
 
 	glm::vec3 epsilon = hitInfo.m_normalHit * m_epsilonFactor;
-	reflection.m_origin = hitInfo.m_positionHit + epsilon;// +(hitInfo.m_isInside ? -epsilon : epsilon);
+	reflection.m_origin = hitInfo.m_positionHit + epsilon; // (hitInfo.m_isInside ? -epsilon : epsilon);
 
 	return reflection;
 }
@@ -339,7 +339,7 @@ Ray & RayTracingWindow::CalcRefractionRay(const Ray & ray, const HitInfo & hitIn
 	refraction.m_direction = glm::normalize(glm::refract(ray.m_direction, hitInfo.m_normalHit, index));
 
 	glm::vec3 epsilon = hitInfo.m_normalHit * m_epsilonFactor;
-	refraction.m_origin = hitInfo.m_positionHit - epsilon;// +(hitInfo.m_isInside ? -epsilon : epsilon);
+	refraction.m_origin = hitInfo.m_positionHit + (hitInfo.m_isInside ? -epsilon : epsilon);
 
 	return refraction;
 }
